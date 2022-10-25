@@ -1,0 +1,50 @@
+CHESS CODING GUIDING ROUTE
+--------------------------
+
+Goal: Coding a chess puzzle interface to run the fMRI experiment. The participant will be able to:
+
+DONE	- See the chess board					
+DONE		- Have a chess board displayed		
+DONE		- Use the correct font for the board and the pieces	
+DONE	- Interact with it using a mouse
+DONE		- Have to be able to play a move by clicking with the left click
+DONE		- Snap the pieces in the center of the squares
+
+DONE - (Hightlight the possible squares for each pieces when clicked on it) Not mandatory
+	
+DONE - Do not allow incorrect moves		board.legal_moves
+	Still to do
+	Castling
+	En passant
+	Check
+	Mate
+	
+	When a square is selected, show it colored
+	
+	
+	
+	- Solve Puzzles
+DONE	- Have to display a specific position given a FEN position
+DONE	- Play the first move of the puzzle FEN given
+		- Play the opponent's moves (Automatic response)
+		- Hightlight the last move played
+DONE	- Change the move nb (meaning if it's black or white to play)
+DONE	- Record the moves tried
+		- Check if the puzzle is solved or not (Compare with the recorded moves)
+		- Record the timing of the puzzle and the global timing
+		- Display the clock
+		- If clock = 0, goes over the next puzzle
+		- Look for puzzle in the Database
+		- If Puzzle is failed/solved/time out, go on with the next puzzle and restart the puzzle procedure)
+		
+	If it's black to play, show it from black's perspective
+	(Showing who is to play) Fine not to do it if we rotate the board
+	
+	
+	-----------
+	Data outputs
+	-----------
+	
+	Participant_Elo, PuzzleId, PuzzleRating, Solved or Failed, Session number, Session Difficulty, Time spent on each puzzle (each move?), Moves played
+	
+	
