@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2022.2.4),
-    on October 31, 2022, at 15:21
+    on November 06, 2022, at 13:38
 If you publish work using this script the most relevant publication is:
 
     Peirce J, Gray JR, Simpson S, MacAskill M, Höchenberger R, Sogo H, Kastman E, Lindeløv JK. (2019) 
@@ -122,7 +122,7 @@ def draw_square(code):
         win=win, name=(code + '_square'),
         width=(1/8), height=(1/8),
         ori=0.0, pos=(x_pos, y_pos), anchor='center',
-        lineWidth=1.0,     colorSpace='rgb',  lineColor=[0, 0, 0], fillColor=[255/256, 87/256, 51/256],
+        lineWidth=0,     colorSpace='rgb',  lineColor=[0, 0, 0], fillColor=[249/256, 194/256, 46/256],
         depth=-5, interpolate=True)
     polygon.setAutoDraw(True)
     return polygon
@@ -192,12 +192,14 @@ def clear_pieces(pieces):
 #        piece._unload()
 
 # Could combine this function with evaluate_move():
-def check_valid_move(board_state, player_pieces, coord):
+def check_valid_move(board_state, player_pieces, coord, possible_moves):
     '''See if player move is valid'''
     target_square_content = board_state[coord[1]][coord[0]]
     if coord[0] < 1 or coord[0] > 8 or coord[1] < 1 or coord[1] > 8:
         return False
     elif search_pieces(player_pieces, target_square_content):
+        return False
+    elif coord not in possible_moves:
         return False
     else:
         return True
@@ -387,7 +389,7 @@ mouse.mouseClock = core.Clock()
 chess_board = visual.ImageStim(
     win=win,
     name='chess_board', 
-    image='images/board.png', mask=None, anchor='center',
+    image='images/board_2.png', mask=None, anchor='center',
     ori=0.0, pos=(0, 0), size=(1, 1),
     color=[1,1,1], colorSpace='rgb', opacity=None,
     flipHoriz=False, flipVert=False,
@@ -622,6 +624,7 @@ for thisChess_trial in chess_trials:
     
     # Track correct/incorrect moves
     player_move_start = []
+    possible_moves = []
     correct_move = True
     
     puzzle_clock = core.Clock()
@@ -780,7 +783,7 @@ for thisChess_trial in chess_trials:
                     if snapped_coord == player_move_start:
                         redeposit = True
                     
-                    valid_move = check_valid_move(board_state, player_pieces, snapped_coord)
+                    valid_move = check_valid_move(board_state, player_pieces, snapped_coord, possible_moves)
                     
                     if redeposit:
                         clicked_piece.pos = coord_to_pos(snapped_coord)
