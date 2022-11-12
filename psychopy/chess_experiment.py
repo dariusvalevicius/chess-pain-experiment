@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2022.2.4),
-    on October 31, 2022, at 12:35
+    on November 12, 2022, at 16:38
 If you publish work using this script the most relevant publication is:
 
     Peirce J, Gray JR, Simpson S, MacAskill M, Höchenberger R, Sogo H, Kastman E, Lindeløv JK. (2019) 
@@ -28,8 +28,14 @@ import sys  # to get file system encoding
 import psychopy.iohub as io
 from psychopy.hardware import keyboard
 
+# Run 'Before Experiment' code from global_timer_start
+
+## Initialize global clock var
+global_clock = core.Clock()
+global_time = 0
 # Run 'Before Experiment' code from move_piece
 import time
+import chess
 
 def coord_to_pos(coord):
     '''Convert coordinate system to
@@ -59,6 +65,17 @@ def code_to_coord(code):
     x_pos = x_axis.index(code[0]) + 1
     y_pos = int(code[1])
     return [x_pos, y_pos]
+    
+def coord_to_code(coord):
+    '''Convert coord to UCI move code'''
+    x_axis = ["a", "b", "c", "d", "e", "f", "g", "h"]
+    print(f"COORD: {coord}")
+    index = coord[0] - 1
+    print(f"INDEX: {index}")
+    x_code = x_axis[index]
+    y_code = coord[1]
+    return f"{x_code}{y_code}"
+
     
 def lerp_position(start_pos, end_pos, fraction):
     '''Linear interpolation between two points'''
@@ -110,7 +127,7 @@ def draw_square(code):
         win=win, name=(code + '_square'),
         width=(1/8), height=(1/8),
         ori=0.0, pos=(x_pos, y_pos), anchor='center',
-        lineWidth=1.0,     colorSpace='rgb',  lineColor=[0, 0, 0], fillColor=[255/256, 87/256, 51/256],
+        lineWidth=0,     colorSpace='rgb',  lineColor=[0, 0, 0], fillColor=[249/256, 194/256, 46/256],
         depth=-5, interpolate=True)
     polygon.setAutoDraw(True)
     return polygon
@@ -162,7 +179,17 @@ def update_board_state(board_state, old_coord, new_coord, value):
     
     for row in board_state:
         print(row)
+    
     return board_state
+    
+def make_uci_move(board_lib, start_coord, end_coord):
+    '''Update python chess board representation'''
+    uci_code = coord_to_code(start_coord) + coord_to_code(end_coord)
+    
+    move = chess.Move.from_uci(uci_code)
+    board_lib.push(move)  # Make the move
+    
+    return board_lib
         
 def clear_pieces(pieces):
     for piece in pieces:
@@ -170,12 +197,14 @@ def clear_pieces(pieces):
 #        piece._unload()
 
 # Could combine this function with evaluate_move():
-def check_valid_move(board_state, player_pieces, coord):
+def check_valid_move(board_state, player_pieces, coord, possible_moves):
     '''See if player move is valid'''
     target_square_content = board_state[coord[1]][coord[0]]
     if coord[0] < 1 or coord[0] > 8 or coord[1] < 1 or coord[1] > 8:
         return False
     elif search_pieces(player_pieces, target_square_content):
+        return False
+    elif coord not in possible_moves:
         return False
     else:
         return True
@@ -219,9 +248,51 @@ def start_enemy_move(moves, move_num, board_state, enemy_pieces):
         
     return moving_piece, start_coord, end_coord, highlight_squares
             
-   
-   
+def scan_legal_moves(board_lib, piece):
+    piece_coord = pos_to_coord(piece.pos)
+    start = coord_to_code(piece_coord)
+    
+    legal_moves = board_lib.legal_moves
+    x_axis = ["a", "b", "c", "d", "e", "f", "g", "h"]
+    
+    possible_moves = []
+
+    for x in range(1,9):
+        for y in range(1,9):
+           
+            uci_code = f"{start}{x_axis[x-1]}{y}"
+            if uci_code[0:2] == uci_code[2:4]:
+                continue
+            move = chess.Move.from_uci(uci_code)
+            if move in legal_moves:
+               possible_moves.append([x, y])
+               
+    return possible_moves
+ 
+def draw_possible_moves(possible_moves):
+    image_path = "images/valid_move.png"
+    valid_move_highlights = []
+    
+    for move in possible_moves:
+        x_pos = coord_to_pos(move[0])
+        y_pos = coord_to_pos(move[1])
+        
+        highlight = visual.ImageStim(win=win, name=f"highlight", image=image_path, 
+        anchor="center", pos=(x_pos, y_pos), size=(1/8, 1/8), depth = -20,
+        texRes=128.0, interpolate=True)
+        highlight.setAutoDraw(True)
+        
+        valid_move_highlights.append(highlight)
+        
+    return valid_move_highlights
+        
+    
+    
 feedback_text = ''   
+correct_color = "springgreen"
+incorrect_color = "red"
+
+puzzle_time = 0
 
 # Data for piece codes and x axis labels
 piece_codes = ["p", "n", "b", "r", "q", "k", "P", "N", "B", "R", "Q", "K"]
@@ -249,7 +320,7 @@ psychopyVersion = '2022.2.4'
 expName = 'chess_experiment'  # from the Builder filename that created this script
 expInfo = {
     'participant': f"{randint(0, 999999):06.0f}",
-    'session': '001',
+    'elo': '1600',
 }
 # --- Show participant info dialog --
 dlg = gui.DlgFromDict(dictionary=expInfo, sortKeys=False, title=expName)
@@ -306,51 +377,59 @@ eyetracker = None
 # create a default keyboard (e.g. to check for escape)
 defaultKeyboard = keyboard.Keyboard(backend='iohub')
 
-# --- Initialize components for Routine "instructions_chess_puzzle" ---
-chess_instructions_1 = visual.TextStim(win=win, name='chess_instructions_1',
-    text='Instructions slide\n\nComplete the chess puzzle',
-    font='Open Sans',
-    pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
-    color=[-1.0000, -1.0000, -1.0000], colorSpace='rgb', opacity=None, 
-    languageStyle='LTR',
-    depth=0.0);
-next_routine_1 = keyboard.Keyboard()
-
-# --- Initialize components for Routine "chess_puzzle" ---
-fixation_chess = visual.TextStim(win=win, name='fixation_chess',
-    text='+',
+# --- Initialize components for Routine "intro" ---
+intro_text = visual.TextStim(win=win, name='intro_text',
+    text='Welcome to the experiment.',
     font='Open Sans',
     pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
     color='white', colorSpace='rgb', opacity=None, 
     languageStyle='LTR',
     depth=0.0);
+start_experiment = keyboard.Keyboard()
+
+# --- Initialize components for Routine "instructions_chess_puzzle" ---
+chess_instructions = visual.TextStim(win=win, name='chess_instructions',
+    text='Instructions slide\n\nComplete the chess puzzles.',
+    font='Open Sans',
+    pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+    color=[-1.0000, -1.0000, -1.0000], colorSpace='rgb', opacity=None, 
+    languageStyle='LTR',
+    depth=0.0);
+start_block = keyboard.Keyboard()
+
+# --- Initialize components for Routine "chess_puzzle" ---
 mouse = event.Mouse(win=win)
 x, y = [None, None]
 mouse.mouseClock = core.Clock()
 chess_board = visual.ImageStim(
     win=win,
     name='chess_board', 
-    image='images/board.png', mask=None, anchor='center',
+    image='images/board_2.png', mask=None, anchor='center',
     ori=0.0, pos=(0, 0), size=(1, 1),
     color=[1,1,1], colorSpace='rgb', opacity=None,
     flipHoriz=False, flipVert=False,
-    texRes=128.0, interpolate=True, depth=-2.0)
+    texRes=128.0, interpolate=True, depth=-1.0)
 chess_feedback = visual.TextStim(win=win, name='chess_feedback',
     text=feedback_text,
     font='Open Sans',
-    pos=(-1.2, 0), height=0.05, wrapWidth=None, ori=0.0, 
+    pos=(-5/8, 0), height=0.05, wrapWidth=None, ori=0.0, 
+    color='white', colorSpace='rgb', opacity=None, 
+    languageStyle='LTR',
+    depth=-3.0);
+puzzle_timer = visual.TextStim(win=win, name='puzzle_timer',
+    text=puzzle_time,
+    font='Open Sans',
+    pos=(-5/8, 2/8), height=0.05, wrapWidth=None, ori=0.0, 
     color='white', colorSpace='rgb', opacity=None, 
     languageStyle='LTR',
     depth=-4.0);
-
-# --- Initialize components for Routine "feedback" ---
-feedback_text_slide = visual.TextStim(win=win, name='feedback_text_slide',
-    text=feedback_text,
+global_timer = visual.TextStim(win=win, name='global_timer',
+    text=None,
     font='Open Sans',
-    pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
+    pos=(-5/8, 3/8), height=0.05, wrapWidth=None, ori=0.0, 
     color='white', colorSpace='rgb', opacity=None, 
     languageStyle='LTR',
-    depth=0.0);
+    depth=-4.0);
 
 # --- Initialize components for Routine "instructions_two_back" ---
 text_2 = visual.TextStim(win=win, name='text_2',
@@ -383,16 +462,16 @@ key_resp = keyboard.Keyboard()
 globalClock = core.Clock()  # to track the time since experiment started
 routineTimer = core.Clock()  # to track time remaining of each (possibly non-slip) routine 
 
-# --- Prepare to start Routine "instructions_chess_puzzle" ---
+# --- Prepare to start Routine "intro" ---
 continueRoutine = True
 routineForceEnded = False
 # update component parameters for each repeat
-next_routine_1.keys = []
-next_routine_1.rt = []
-_next_routine_1_allKeys = []
+start_experiment.keys = []
+start_experiment.rt = []
+_start_experiment_allKeys = []
 # keep track of which components have finished
-instructions_chess_puzzleComponents = [chess_instructions_1, next_routine_1]
-for thisComponent in instructions_chess_puzzleComponents:
+introComponents = [intro_text, start_experiment]
+for thisComponent in introComponents:
     thisComponent.tStart = None
     thisComponent.tStop = None
     thisComponent.tStartRefresh = None
@@ -404,7 +483,7 @@ t = 0
 _timeToFirstFrame = win.getFutureFlipTime(clock="now")
 frameN = -1
 
-# --- Run Routine "instructions_chess_puzzle" ---
+# --- Run Routine "intro" ---
 while continueRoutine:
     # get current time
     t = routineTimer.getTime()
@@ -413,38 +492,41 @@ while continueRoutine:
     frameN = frameN + 1  # number of completed frames (so 0 is the first frame)
     # update/draw components on each frame
     
-    # *chess_instructions_1* updates
-    if chess_instructions_1.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
+    # *intro_text* updates
+    if intro_text.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
         # keep track of start time/frame for later
-        chess_instructions_1.frameNStart = frameN  # exact frame index
-        chess_instructions_1.tStart = t  # local t and not account for scr refresh
-        chess_instructions_1.tStartRefresh = tThisFlipGlobal  # on global time
-        win.timeOnFlip(chess_instructions_1, 'tStartRefresh')  # time at next scr refresh
-        # add timestamp to datafile
-        thisExp.timestampOnFlip(win, 'chess_instructions_1.started')
-        chess_instructions_1.setAutoDraw(True)
+        intro_text.frameNStart = frameN  # exact frame index
+        intro_text.tStart = t  # local t and not account for scr refresh
+        intro_text.tStartRefresh = tThisFlipGlobal  # on global time
+        win.timeOnFlip(intro_text, 'tStartRefresh')  # time at next scr refresh
+        intro_text.setAutoDraw(True)
+    if intro_text.status == STARTED:
+        # is it time to stop? (based on global clock, using actual start)
+        if tThisFlipGlobal > intro_text.tStartRefresh + 1.0-frameTolerance:
+            # keep track of stop time/frame for later
+            intro_text.tStop = t  # not accounting for scr refresh
+            intro_text.frameNStop = frameN  # exact frame index
+            intro_text.setAutoDraw(False)
     
-    # *next_routine_1* updates
+    # *start_experiment* updates
     waitOnFlip = False
-    if next_routine_1.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
+    if start_experiment.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
         # keep track of start time/frame for later
-        next_routine_1.frameNStart = frameN  # exact frame index
-        next_routine_1.tStart = t  # local t and not account for scr refresh
-        next_routine_1.tStartRefresh = tThisFlipGlobal  # on global time
-        win.timeOnFlip(next_routine_1, 'tStartRefresh')  # time at next scr refresh
-        # add timestamp to datafile
-        thisExp.timestampOnFlip(win, 'next_routine_1.started')
-        next_routine_1.status = STARTED
+        start_experiment.frameNStart = frameN  # exact frame index
+        start_experiment.tStart = t  # local t and not account for scr refresh
+        start_experiment.tStartRefresh = tThisFlipGlobal  # on global time
+        win.timeOnFlip(start_experiment, 'tStartRefresh')  # time at next scr refresh
+        start_experiment.status = STARTED
         # keyboard checking is just starting
         waitOnFlip = True
-        win.callOnFlip(next_routine_1.clock.reset)  # t=0 on next screen flip
-        win.callOnFlip(next_routine_1.clearEvents, eventType='keyboard')  # clear events on next screen flip
-    if next_routine_1.status == STARTED and not waitOnFlip:
-        theseKeys = next_routine_1.getKeys(keyList=['space'], waitRelease=False)
-        _next_routine_1_allKeys.extend(theseKeys)
-        if len(_next_routine_1_allKeys):
-            next_routine_1.keys = _next_routine_1_allKeys[-1].name  # just the last key pressed
-            next_routine_1.rt = _next_routine_1_allKeys[-1].rt
+        win.callOnFlip(start_experiment.clock.reset)  # t=0 on next screen flip
+        win.callOnFlip(start_experiment.clearEvents, eventType='keyboard')  # clear events on next screen flip
+    if start_experiment.status == STARTED and not waitOnFlip:
+        theseKeys = start_experiment.getKeys(keyList=['space'], waitRelease=False)
+        _start_experiment_allKeys.extend(theseKeys)
+        if len(_start_experiment_allKeys):
+            start_experiment.keys = _start_experiment_allKeys[-1].name  # just the last key pressed
+            start_experiment.rt = _start_experiment_allKeys[-1].rt
             # a response ends the routine
             continueRoutine = False
     
@@ -457,7 +539,7 @@ while continueRoutine:
         routineForceEnded = True
         break
     continueRoutine = False  # will revert to True if at least one component still running
-    for thisComponent in instructions_chess_puzzleComponents:
+    for thisComponent in introComponents:
         if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
             continueRoutine = True
             break  # at least one component has not yet finished
@@ -466,111 +548,42 @@ while continueRoutine:
     if continueRoutine:  # don't flip if this routine is over or we'll get a blank screen
         win.flip()
 
-# --- Ending Routine "instructions_chess_puzzle" ---
-for thisComponent in instructions_chess_puzzleComponents:
+# --- Ending Routine "intro" ---
+for thisComponent in introComponents:
     if hasattr(thisComponent, "setAutoDraw"):
         thisComponent.setAutoDraw(False)
-# check responses
-if next_routine_1.keys in ['', [], None]:  # No response was made
-    next_routine_1.keys = None
-thisExp.addData('next_routine_1.keys',next_routine_1.keys)
-if next_routine_1.keys != None:  # we had a response
-    thisExp.addData('next_routine_1.rt', next_routine_1.rt)
-thisExp.nextEntry()
-# the Routine "instructions_chess_puzzle" was not non-slip safe, so reset the non-slip timer
+# the Routine "intro" was not non-slip safe, so reset the non-slip timer
 routineTimer.reset()
 
 # set up handler to look after randomisation of conditions etc
-chess_trials = data.TrialHandler(nReps=1.0, method='random', 
+chess_levels = data.TrialHandler(nReps=1.0, method='sequential', 
     extraInfo=expInfo, originPath=-1,
-    trialList=data.importConditions('conditions_chess.tsv'),
-    seed=None, name='chess_trials')
-thisExp.addLoop(chess_trials)  # add the loop to the experiment
-thisChess_trial = chess_trials.trialList[0]  # so we can initialise stimuli with some values
-# abbreviate parameter names if possible (e.g. rgb = thisChess_trial.rgb)
-if thisChess_trial != None:
-    for paramName in thisChess_trial:
-        exec('{} = thisChess_trial[paramName]'.format(paramName))
+    trialList=data.importConditions('conditions_chess_levels.tsv'),
+    seed=None, name='chess_levels')
+thisExp.addLoop(chess_levels)  # add the loop to the experiment
+thisChess_level = chess_levels.trialList[0]  # so we can initialise stimuli with some values
+# abbreviate parameter names if possible (e.g. rgb = thisChess_level.rgb)
+if thisChess_level != None:
+    for paramName in thisChess_level:
+        exec('{} = thisChess_level[paramName]'.format(paramName))
 
-for thisChess_trial in chess_trials:
-    currentLoop = chess_trials
-    # abbreviate parameter names if possible (e.g. rgb = thisChess_trial.rgb)
-    if thisChess_trial != None:
-        for paramName in thisChess_trial:
-            exec('{} = thisChess_trial[paramName]'.format(paramName))
+for thisChess_level in chess_levels:
+    currentLoop = chess_levels
+    # abbreviate parameter names if possible (e.g. rgb = thisChess_level.rgb)
+    if thisChess_level != None:
+        for paramName in thisChess_level:
+            exec('{} = thisChess_level[paramName]'.format(paramName))
     
-    # --- Prepare to start Routine "chess_puzzle" ---
+    # --- Prepare to start Routine "instructions_chess_puzzle" ---
     continueRoutine = True
     routineForceEnded = False
     # update component parameters for each repeat
-    # setup some python lists for storing info about the mouse
-    mouse.x = []
-    mouse.y = []
-    mouse.leftButton = []
-    mouse.midButton = []
-    mouse.rightButton = []
-    mouse.time = []
-    mouse.clicked_name = []
-    gotValidClick = False  # until a click is received
-    # Run 'Begin Routine' code from move_piece
-    # Begin Routine
-    
-    # Initialize board state and piece arrays
-    board_state = [['' for i in range(12)] for i in range(9)]
-    white_pieces = []
-    black_pieces = []
-    
-    # For testing: sample FEN string
-    fen_str = FEN
-    fen = fen_str.split(" ")
-    
-    moves_str = moves
-    moves = moves_str.split()
-    
-    # Populate the board based on the FEN
-    white_pieces, black_pieces, board_state = create_pieces(fen, board_state)
-    clicked_piece = None
-    
-    player_pieces = []
-    enemy_pieces = []
-    
-    # Identify player and enemy
-    if fen[1] == "b":
-        player_pieces = white_pieces
-        enemy_pieces = black_pieces
-    elif fen[1] == "w":
-        player_pieces = black_pieces
-        enemy_pieces = white_pieces
-    else:
-        raise Exception("ERROR: FEN does not have team label.")
-    
-    
-    # Set up first computer move
-    enemy_move = True
-    move_num = 0
-        
-    moving_piece, start_coord, end_coord, highlight_squares = start_enemy_move(moves, move_num, board_state, enemy_pieces)
-    
-    # Initialize computer movement clock
-    move_clock = core.Clock()
-    move_clock.reset(newT=0.0)
-    
-    # Start mouse clock
-    # This is for a click cooldown to prevent accidental double-clicking
-    mouse_clock = core.Clock()
-    mouse_clock.addTime(100)
-    
-    # Track correct/incorrect moves
-    player_move_start = []
-    correct_move = True
-    
-    
-    
-    
-    
+    start_block.keys = []
+    start_block.rt = []
+    _start_block_allKeys = []
     # keep track of which components have finished
-    chess_puzzleComponents = [fixation_chess, mouse, chess_board, chess_feedback]
-    for thisComponent in chess_puzzleComponents:
+    instructions_chess_puzzleComponents = [chess_instructions, start_block]
+    for thisComponent in instructions_chess_puzzleComponents:
         thisComponent.tStart = None
         thisComponent.tStop = None
         thisComponent.tStartRefresh = None
@@ -582,7 +595,7 @@ for thisChess_trial in chess_trials:
     _timeToFirstFrame = win.getFutureFlipTime(clock="now")
     frameN = -1
     
-    # --- Run Routine "chess_puzzle" ---
+    # --- Run Routine "instructions_chess_puzzle" ---
     while continueRoutine:
         # get current time
         t = routineTimer.getTime()
@@ -591,293 +604,421 @@ for thisChess_trial in chess_trials:
         frameN = frameN + 1  # number of completed frames (so 0 is the first frame)
         # update/draw components on each frame
         
-        # *fixation_chess* updates
-        if fixation_chess.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
+        # *chess_instructions* updates
+        if chess_instructions.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
             # keep track of start time/frame for later
-            fixation_chess.frameNStart = frameN  # exact frame index
-            fixation_chess.tStart = t  # local t and not account for scr refresh
-            fixation_chess.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(fixation_chess, 'tStartRefresh')  # time at next scr refresh
-            # add timestamp to datafile
-            thisExp.timestampOnFlip(win, 'fixation_chess.started')
-            fixation_chess.setAutoDraw(True)
-        if fixation_chess.status == STARTED:
-            # is it time to stop? (based on global clock, using actual start)
-            if tThisFlipGlobal > fixation_chess.tStartRefresh + 0.5-frameTolerance:
-                # keep track of stop time/frame for later
-                fixation_chess.tStop = t  # not accounting for scr refresh
-                fixation_chess.frameNStop = frameN  # exact frame index
-                # add timestamp to datafile
-                thisExp.timestampOnFlip(win, 'fixation_chess.stopped')
-                fixation_chess.setAutoDraw(False)
-        # *mouse* updates
-        if mouse.status == NOT_STARTED and t >= 0-frameTolerance:
-            # keep track of start time/frame for later
-            mouse.frameNStart = frameN  # exact frame index
-            mouse.tStart = t  # local t and not account for scr refresh
-            mouse.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(mouse, 'tStartRefresh')  # time at next scr refresh
-            # add timestamp to datafile
-            thisExp.addData('mouse.started', t)
-            mouse.status = STARTED
-            mouse.mouseClock.reset()
-            prevButtonState = mouse.getPressed()  # if button is down already this ISN'T a new click
-        if mouse.status == STARTED:  # only update if started and not finished!
-            buttons = mouse.getPressed()
-            if buttons != prevButtonState:  # button state changed?
-                prevButtonState = buttons
-                if sum(buttons) > 0:  # state changed to a new click
-                    # check if the mouse was inside our 'clickable' objects
-                    gotValidClick = False
-                    try:
-                        iter(white_pieces)
-                        clickableList = white_pieces
-                    except:
-                        clickableList = [white_pieces]
-                    for obj in clickableList:
-                        if obj.contains(mouse):
-                            gotValidClick = True
-                            mouse.clicked_name.append(obj.name)
-                    x, y = mouse.getPos()
-                    mouse.x.append(x)
-                    mouse.y.append(y)
-                    buttons = mouse.getPressed()
-                    mouse.leftButton.append(buttons[0])
-                    mouse.midButton.append(buttons[1])
-                    mouse.rightButton.append(buttons[2])
-                    mouse.time.append(mouse.mouseClock.getTime())
+            chess_instructions.frameNStart = frameN  # exact frame index
+            chess_instructions.tStart = t  # local t and not account for scr refresh
+            chess_instructions.tStartRefresh = tThisFlipGlobal  # on global time
+            win.timeOnFlip(chess_instructions, 'tStartRefresh')  # time at next scr refresh
+            chess_instructions.setAutoDraw(True)
         
-        # *chess_board* updates
-        if chess_board.status == NOT_STARTED and tThisFlip >= 0-frameTolerance:
+        # *start_block* updates
+        waitOnFlip = False
+        if start_block.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
             # keep track of start time/frame for later
-            chess_board.frameNStart = frameN  # exact frame index
-            chess_board.tStart = t  # local t and not account for scr refresh
-            chess_board.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(chess_board, 'tStartRefresh')  # time at next scr refresh
-            # add timestamp to datafile
-            thisExp.timestampOnFlip(win, 'chess_board.started')
-            chess_board.setAutoDraw(True)
-        # Run 'Each Frame' code from move_piece
-        # Each Frame
+            start_block.frameNStart = frameN  # exact frame index
+            start_block.tStart = t  # local t and not account for scr refresh
+            start_block.tStartRefresh = tThisFlipGlobal  # on global time
+            win.timeOnFlip(start_block, 'tStartRefresh')  # time at next scr refresh
+            start_block.status = STARTED
+            # keyboard checking is just starting
+            waitOnFlip = True
+            win.callOnFlip(start_block.clock.reset)  # t=0 on next screen flip
+            win.callOnFlip(start_block.clearEvents, eventType='keyboard')  # clear events on next screen flip
+        if start_block.status == STARTED and not waitOnFlip:
+            theseKeys = start_block.getKeys(keyList=['space'], waitRelease=False)
+            _start_block_allKeys.extend(theseKeys)
+            if len(_start_block_allKeys):
+                start_block.keys = _start_block_allKeys[-1].name  # just the last key pressed
+                start_block.rt = _start_block_allKeys[-1].rt
+                # a response ends the routine
+                continueRoutine = False
         
-        # Code executed if a piece is crrently being
-        # moved by the computer
-        if moving_piece is not None:
-            time_elapsed = move_clock.getTime()
-            moving_piece, move_finished = move_piece(time_elapsed, moving_piece, start_coord, end_coord, move_time)
-            if move_finished:
-                piece_taken = evaluate_move(board_state, enemy_pieces, player_pieces, end_coord)
+        # check for quit (typically the Esc key)
+        if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
+            core.quit()
+        
+        # check if all components have finished
+        if not continueRoutine:  # a component has requested a forced-end of Routine
+            routineForceEnded = True
+            break
+        continueRoutine = False  # will revert to True if at least one component still running
+        for thisComponent in instructions_chess_puzzleComponents:
+            if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
+                continueRoutine = True
+                break  # at least one component has not yet finished
+        
+        # refresh the screen
+        if continueRoutine:  # don't flip if this routine is over or we'll get a blank screen
+            win.flip()
+    
+    # --- Ending Routine "instructions_chess_puzzle" ---
+    for thisComponent in instructions_chess_puzzleComponents:
+        if hasattr(thisComponent, "setAutoDraw"):
+            thisComponent.setAutoDraw(False)
+    # Run 'End Routine' code from global_timer_start
+    
+    ## Start clock for the block
+    global_clock.reset()
+    # the Routine "instructions_chess_puzzle" was not non-slip safe, so reset the non-slip timer
+    routineTimer.reset()
+    
+    # set up handler to look after randomisation of conditions etc
+    chess_trials = data.TrialHandler(nReps=1.0, method='random', 
+        extraInfo=expInfo, originPath=-1,
+        trialList=data.importConditions('conditions_chess.tsv'),
+        seed=None, name='chess_trials')
+    thisExp.addLoop(chess_trials)  # add the loop to the experiment
+    thisChess_trial = chess_trials.trialList[0]  # so we can initialise stimuli with some values
+    # abbreviate parameter names if possible (e.g. rgb = thisChess_trial.rgb)
+    if thisChess_trial != None:
+        for paramName in thisChess_trial:
+            exec('{} = thisChess_trial[paramName]'.format(paramName))
+    
+    for thisChess_trial in chess_trials:
+        currentLoop = chess_trials
+        # abbreviate parameter names if possible (e.g. rgb = thisChess_trial.rgb)
+        if thisChess_trial != None:
+            for paramName in thisChess_trial:
+                exec('{} = thisChess_trial[paramName]'.format(paramName))
+        
+        # --- Prepare to start Routine "chess_puzzle" ---
+        continueRoutine = True
+        routineForceEnded = False
+        # update component parameters for each repeat
+        # setup some python lists for storing info about the mouse
+        mouse.clicked_name = []
+        gotValidClick = False  # until a click is received
+        # Run 'Begin Routine' code from move_piece
+        # Begin Routine
+        
+        # Initialize board state and piece arrays
+        board_state = [['' for i in range(12)] for i in range(9)]
+        white_pieces = []
+        black_pieces = []
+        
+        # Chess board from chess library
+        
+        board_lib = chess.Board()
+        board_lib.set_fen(FEN)
+        
+        # For testing: sample FEN string
+        fen_str = FEN
+        fen = fen_str.split(" ")
+        
+        moves_str = moves
+        moves = moves_str.split()
+        
+        # Populate the board based on the FEN
+        white_pieces, black_pieces, board_state = create_pieces(fen, board_state)
+        clicked_piece = None
+        
+        player_pieces = []
+        enemy_pieces = []
+        
+        # Identify player and enemy
+        if fen[1] == "b":
+            player_pieces = white_pieces
+            enemy_pieces = black_pieces
+        elif fen[1] == "w":
+            player_pieces = black_pieces
+            enemy_pieces = white_pieces
+        else:
+            raise Exception("ERROR: FEN does not have team label.")
+        
+        
+        # Set up first computer move
+        enemy_move = True
+        move_num = 0
+            
+        moving_piece, start_coord, end_coord, highlight_squares = start_enemy_move(moves, move_num, board_state, enemy_pieces)
+        
+        # Initialize computer movement clock
+        move_clock = core.Clock()
+        move_clock.reset(newT=0.0)
+        
+        # Start mouse clock
+        # This is for a click cooldown to prevent accidental double-clicking
+        mouse_clock = core.Clock()
+        mouse_clock.addTime(100)
+        
+        # Track correct/incorrect moves
+        player_move_start = []
+        possible_moves = []
+        correct_move = True
+        
+        #global global_clock
+        
+        puzzle_clock = core.Clock()
+        puzzle_time = puzzle_clock.getTime()
+        
+        timeout_clock = core.Clock()
+        timout_time = 0
+        timeout = False
+        
+        feedback_text = ''   
+        
+        
+        
+        
+        
+        
+        # keep track of which components have finished
+        chess_puzzleComponents = [mouse, chess_board, chess_feedback, puzzle_timer, global_timer]
+        for thisComponent in chess_puzzleComponents:
+            thisComponent.tStart = None
+            thisComponent.tStop = None
+            thisComponent.tStartRefresh = None
+            thisComponent.tStopRefresh = None
+            if hasattr(thisComponent, 'status'):
+                thisComponent.status = NOT_STARTED
+        # reset timers
+        t = 0
+        _timeToFirstFrame = win.getFutureFlipTime(clock="now")
+        frameN = -1
+        
+        # --- Run Routine "chess_puzzle" ---
+        while continueRoutine:
+            # get current time
+            t = routineTimer.getTime()
+            tThisFlip = win.getFutureFlipTime(clock=routineTimer)
+            tThisFlipGlobal = win.getFutureFlipTime(clock=None)
+            frameN = frameN + 1  # number of completed frames (so 0 is the first frame)
+            # update/draw components on each frame
+            # *mouse* updates
+            if mouse.status == NOT_STARTED and t >= 0-frameTolerance:
+                # keep track of start time/frame for later
+                mouse.frameNStart = frameN  # exact frame index
+                mouse.tStart = t  # local t and not account for scr refresh
+                mouse.tStartRefresh = tThisFlipGlobal  # on global time
+                win.timeOnFlip(mouse, 'tStartRefresh')  # time at next scr refresh
+                mouse.status = STARTED
+                mouse.mouseClock.reset()
+                prevButtonState = mouse.getPressed()  # if button is down already this ISN'T a new click
+            
+            # *chess_board* updates
+            if chess_board.status == NOT_STARTED and tThisFlip >= 0-frameTolerance:
+                # keep track of start time/frame for later
+                chess_board.frameNStart = frameN  # exact frame index
+                chess_board.tStart = t  # local t and not account for scr refresh
+                chess_board.tStartRefresh = tThisFlipGlobal  # on global time
+                win.timeOnFlip(chess_board, 'tStartRefresh')  # time at next scr refresh
+                chess_board.setAutoDraw(True)
+            # Run 'Each Frame' code from move_piece
+            # Each Frame
+            
+            puzzle_time = puzzle_clock.getTime()
+            global_time = global_clock.getTime()
+            
+            if timeout:
+                timeout_time = timeout_clock.getTime()
+                if timeout_time > 2:
+                    continueRoutine = False
+            elif puzzle_time > 30: # Puzzle timeout
+                feedback_text = "Out of time"
+                chess_feedback.text = feedback_text
+                chess_feedback.color = incorrect_color
                 
-                board_state = update_board_state(board_state, start_coord, end_coord, moving_piece.name)
+                timeout_clock.reset()
+                timeout = True
+            elif global_time > 180: # Block timeout
+                feedback_text = "Out of time:\nBlock over"
+                chess_feedback.text = feedback_text
+                chess_feedback.color = "black"
                 
-                # Reset clock
-                move_clock.reset()
-                
-                if enemy_move:
-                    move_num = move_num + 1
-                    enemy_move = False
+                timeout_clock.reset()
+                timeout = True
+                chess_trials.finished = True
+            
+            # Update clock displays
+            puzzle_timer.text = time.strftime('%S', time.gmtime(30 - puzzle_time))
+            global_timer.text = time.strftime('%M:%S', time.gmtime(global_time))
+            
+            # Code executed if a piece is crrently being
+            # moved by the computer
+            if moving_piece is not None:
+                time_elapsed = move_clock.getTime()
+                moving_piece, move_finished = move_piece(time_elapsed, moving_piece, start_coord, end_coord, move_time)
+                if move_finished:
+                    piece_taken = evaluate_move(board_state, enemy_pieces, player_pieces, end_coord)
                     
-                if piece_taken:
-                    take_coord = find_empty_take_square(board_state) # Create function to get empty coord
-                    moving_piece, start_coord, end_coord = begin_move(piece_taken, end_coord, take_coord)
-                else:
-                    moving_piece = None
-        
-        # Check mouse click cooldown
-        cooldown = mouse_clock.getTime() < 0.1
-        
-        # Check for piece selection
-        if clicked_piece is None and moving_piece is None:
-            for piece in player_pieces:                # for each pic
-                if not cooldown and mouse.isPressedIn(piece, buttons=[0]):    # If the picture is currently click
-                    clicked_piece = piece
-                    player_move_start = pos_to_coord(clicked_piece.pos)
-                    mouse_clock.reset()
-        # Check for piece placement
-        elif clicked_piece is not None:
-            clicked_piece.pos = mouse.getPos()
-            
-            if not cooldown and mouse.isPressedIn(clicked_piece, buttons=[0]):
-                snapped_coord = pos_to_coord(mouse.getPos())
-                
-                # See if move is a redeposit
-                redeposit = False
-                if snapped_coord == player_move_start:
-                    redeposit = True
-                
-                valid_move = check_valid_move(board_state, player_pieces, snapped_coord)
-                
-                if redeposit:
-                    clicked_piece.pos = coord_to_pos(snapped_coord)
-                elif valid_move:
-            
-                    clicked_piece.pos = coord_to_pos(snapped_coord)
-                    piece_taken = evaluate_move(board_state, enemy_pieces, player_pieces, snapped_coord)
+                    board_state = update_board_state(board_state, start_coord, end_coord, moving_piece.name)
+                    
+                    if end_coord[0] < 9: # Not moving piece off board
+                        board_lib = make_uci_move(board_lib, start_coord, end_coord)
                     
                     # Reset clock
                     move_clock.reset()
                     
-                    board_state = update_board_state(board_state, player_move_start, snapped_coord, clicked_piece.name)
-        
-                    if piece_taken:
-                        take_coord = find_empty_take_square(board_state)
-                        moving_piece, start_coord, end_coord = begin_move(piece_taken, snapped_coord, take_coord)
-                        
-                    clicked_piece = None
-                    
-                    # Check for correct move or end of puzzle
-                    correct_move = check_correct_move(move_num, moves, player_move_start, snapped_coord)
-                    
-                   
-                    if (correct_move == False) or (move_num == len(moves) - 1):
-                        feedback_text = "Correct" if correct_move else "Incorrect"
-                        chess_feedback.text = feedback_text
-        
-                        time.sleep(1)
-        
-                        continueRoutine = False
-                    else:
-                        clear_pieces(highlight_squares)
+                    if enemy_move:
                         move_num = move_num + 1
-                        enemy_move = True
+                        enemy_move = False
                         
-                mouse_clock.reset()
-                
-        if (enemy_move) and (moving_piece is None):
-            moving_piece, start_coord, end_coord, highlight_squares = start_enemy_move(moves, move_num, board_state, enemy_pieces)
-        
+                    if piece_taken:
+                        take_coord = find_empty_take_square(board_state) # Create function to get empty coord
+                        moving_piece, start_coord, end_coord = begin_move(piece_taken, end_coord, take_coord)
+                    else:
+                        moving_piece = None
             
+            # Check mouse click cooldown
+            cooldown = mouse_clock.getTime() < 0.1
+            
+            if not timeout:
+                # Check for piece selection
+                if clicked_piece is None and moving_piece is None:
+                    for piece in player_pieces:                # for each pic
+                        if not cooldown and mouse.isPressedIn(piece, buttons=[0]):    # If the picture is currently click
+                            clicked_piece = piece
+                            player_move_start = pos_to_coord(clicked_piece.pos)
+                            mouse_clock.reset()
+                            
+                            # Look for legal moves
+                            possible_moves = scan_legal_moves(board_lib, clicked_piece)
+                            valid_move_highlights = draw_possible_moves(possible_moves)
+                            
+                # Check for piece placement
+                elif clicked_piece is not None:
+                    clicked_piece.pos = mouse.getPos()
+                    
+                    if not cooldown and mouse.isPressedIn(clicked_piece, buttons=[0]):
+                        snapped_coord = pos_to_coord(mouse.getPos())
+                        
+                        # See if move is a redeposit
+                        redeposit = False
+                        if snapped_coord == player_move_start:
+                            redeposit = True
+                        
+                        valid_move = check_valid_move(board_state, player_pieces, snapped_coord, possible_moves)
+                        
+                        if redeposit:
+                            clicked_piece.pos = coord_to_pos(snapped_coord)
+                            clicked_piece = None
+                            clear_pieces(valid_move_highlights)
+            
+                        elif valid_move:
+                    
+                            clicked_piece.pos = coord_to_pos(snapped_coord)
+                            piece_taken = evaluate_move(board_state, enemy_pieces, player_pieces, snapped_coord)
+                            
+                            clear_pieces(valid_move_highlights)
+                            
+                            # Reset clock
+                            move_clock.reset()
+                            
+                            board_state = update_board_state(board_state, player_move_start, snapped_coord, clicked_piece.name)
+                            board_lib = make_uci_move(board_lib, player_move_start, snapped_coord)
+            
+                            if piece_taken:
+                                take_coord = find_empty_take_square(board_state)
+                                moving_piece, start_coord, end_coord = begin_move(piece_taken, snapped_coord, take_coord)
+                                
+                            clicked_piece = None
+                            
+                            # Check for correct move or end of puzzle
+                            correct_move = check_correct_move(move_num, moves, player_move_start, snapped_coord)
+                            
+                           
+                            if (correct_move == False) or (move_num == len(moves) - 1):
+                                feedback_text = "Correct" if correct_move else "Incorrect"
+                                chess_feedback.text = feedback_text
+                                if correct_move:
+                                    chess_feedback.color = correct_color
+                                else:
+                                    chess_feedback.color = incorrect_color
+                                    
+                                timeout_clock.reset()
+                                timeout = True
+                #                chess_feedback.setAutoDraw(True)
+                                
+                                # Start timeout clock
+                #                timeout_clock.reset()
+                                
+                            else:
+                                clear_pieces(highlight_squares)
+                                move_num = move_num + 1
+                                enemy_move = True
+                                
+                        mouse_clock.reset()
+                        
+                if (enemy_move) and (moving_piece is None):
+                    moving_piece, start_coord, end_coord, highlight_squares = start_enemy_move(moves, move_num, board_state, enemy_pieces)
+            
+            #if timeout_clock.getTime() > 1:
+                
+            
+            
+            # *chess_feedback* updates
+            if chess_feedback.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
+                # keep track of start time/frame for later
+                chess_feedback.frameNStart = frameN  # exact frame index
+                chess_feedback.tStart = t  # local t and not account for scr refresh
+                chess_feedback.tStartRefresh = tThisFlipGlobal  # on global time
+                win.timeOnFlip(chess_feedback, 'tStartRefresh')  # time at next scr refresh
+                chess_feedback.setAutoDraw(True)
+            
+            # *puzzle_timer* updates
+            if puzzle_timer.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
+                # keep track of start time/frame for later
+                puzzle_timer.frameNStart = frameN  # exact frame index
+                puzzle_timer.tStart = t  # local t and not account for scr refresh
+                puzzle_timer.tStartRefresh = tThisFlipGlobal  # on global time
+                win.timeOnFlip(puzzle_timer, 'tStartRefresh')  # time at next scr refresh
+                puzzle_timer.setAutoDraw(True)
+            
+            # *global_timer* updates
+            if global_timer.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
+                # keep track of start time/frame for later
+                global_timer.frameNStart = frameN  # exact frame index
+                global_timer.tStart = t  # local t and not account for scr refresh
+                global_timer.tStartRefresh = tThisFlipGlobal  # on global time
+                win.timeOnFlip(global_timer, 'tStartRefresh')  # time at next scr refresh
+                global_timer.setAutoDraw(True)
+            
+            # check for quit (typically the Esc key)
+            if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
+                core.quit()
+            
+            # check if all components have finished
+            if not continueRoutine:  # a component has requested a forced-end of Routine
+                routineForceEnded = True
+                break
+            continueRoutine = False  # will revert to True if at least one component still running
+            for thisComponent in chess_puzzleComponents:
+                if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
+                    continueRoutine = True
+                    break  # at least one component has not yet finished
+            
+            # refresh the screen
+            if continueRoutine:  # don't flip if this routine is over or we'll get a blank screen
+                win.flip()
         
-        
-        
-        # *chess_feedback* updates
-        if chess_feedback.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            chess_feedback.frameNStart = frameN  # exact frame index
-            chess_feedback.tStart = t  # local t and not account for scr refresh
-            chess_feedback.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(chess_feedback, 'tStartRefresh')  # time at next scr refresh
-            # add timestamp to datafile
-            thisExp.timestampOnFlip(win, 'chess_feedback.started')
-            chess_feedback.setAutoDraw(True)
-        
-        # check for quit (typically the Esc key)
-        if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
-            core.quit()
-        
-        # check if all components have finished
-        if not continueRoutine:  # a component has requested a forced-end of Routine
-            routineForceEnded = True
-            break
-        continueRoutine = False  # will revert to True if at least one component still running
+        # --- Ending Routine "chess_puzzle" ---
         for thisComponent in chess_puzzleComponents:
-            if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
-                continueRoutine = True
-                break  # at least one component has not yet finished
+            if hasattr(thisComponent, "setAutoDraw"):
+                thisComponent.setAutoDraw(False)
+        # store data for chess_trials (TrialHandler)
+        # Run 'End Routine' code from move_piece
         
-        # refresh the screen
-        if continueRoutine:  # don't flip if this routine is over or we'll get a blank screen
-            win.flip()
-    
-    # --- Ending Routine "chess_puzzle" ---
-    for thisComponent in chess_puzzleComponents:
-        if hasattr(thisComponent, "setAutoDraw"):
-            thisComponent.setAutoDraw(False)
-    # store data for chess_trials (TrialHandler)
-    chess_trials.addData('mouse.x', mouse.x)
-    chess_trials.addData('mouse.y', mouse.y)
-    chess_trials.addData('mouse.leftButton', mouse.leftButton)
-    chess_trials.addData('mouse.midButton', mouse.midButton)
-    chess_trials.addData('mouse.rightButton', mouse.rightButton)
-    chess_trials.addData('mouse.time', mouse.time)
-    chess_trials.addData('mouse.clicked_name', mouse.clicked_name)
-    # Run 'End Routine' code from move_piece
-    
-    clear_pieces(white_pieces)
-    clear_pieces(black_pieces)
-    clear_pieces(highlight_squares)
-    
-    win.flip()
-    # the Routine "chess_puzzle" was not non-slip safe, so reset the non-slip timer
-    routineTimer.reset()
-    
-    # --- Prepare to start Routine "feedback" ---
-    continueRoutine = True
-    routineForceEnded = False
-    # update component parameters for each repeat
-    # keep track of which components have finished
-    feedbackComponents = [feedback_text_slide]
-    for thisComponent in feedbackComponents:
-        thisComponent.tStart = None
-        thisComponent.tStop = None
-        thisComponent.tStartRefresh = None
-        thisComponent.tStopRefresh = None
-        if hasattr(thisComponent, 'status'):
-            thisComponent.status = NOT_STARTED
-    # reset timers
-    t = 0
-    _timeToFirstFrame = win.getFutureFlipTime(clock="now")
-    frameN = -1
-    
-    # --- Run Routine "feedback" ---
-    while continueRoutine and routineTimer.getTime() < 1.0:
-        # get current time
-        t = routineTimer.getTime()
-        tThisFlip = win.getFutureFlipTime(clock=routineTimer)
-        tThisFlipGlobal = win.getFutureFlipTime(clock=None)
-        frameN = frameN + 1  # number of completed frames (so 0 is the first frame)
-        # update/draw components on each frame
+        #chess_feedback.setAutoDraw(False)
         
-        # *feedback_text_slide* updates
-        if feedback_text_slide.status == NOT_STARTED and tThisFlip >= 0.0-frameTolerance:
-            # keep track of start time/frame for later
-            feedback_text_slide.frameNStart = frameN  # exact frame index
-            feedback_text_slide.tStart = t  # local t and not account for scr refresh
-            feedback_text_slide.tStartRefresh = tThisFlipGlobal  # on global time
-            win.timeOnFlip(feedback_text_slide, 'tStartRefresh')  # time at next scr refresh
-            # add timestamp to datafile
-            thisExp.timestampOnFlip(win, 'feedback_text_slide.started')
-            feedback_text_slide.setAutoDraw(True)
-        if feedback_text_slide.status == STARTED:
-            # is it time to stop? (based on global clock, using actual start)
-            if tThisFlipGlobal > feedback_text_slide.tStartRefresh + 1.0-frameTolerance:
-                # keep track of stop time/frame for later
-                feedback_text_slide.tStop = t  # not accounting for scr refresh
-                feedback_text_slide.frameNStop = frameN  # exact frame index
-                # add timestamp to datafile
-                thisExp.timestampOnFlip(win, 'feedback_text_slide.stopped')
-                feedback_text_slide.setAutoDraw(False)
+        feedback_text = ''   
+        chess_feedback.text = feedback_text
         
-        # check for quit (typically the Esc key)
-        if endExpNow or defaultKeyboard.getKeys(keyList=["escape"]):
-            core.quit()
+        clear_pieces(white_pieces)
+        clear_pieces(black_pieces)
+        clear_pieces(highlight_squares)
         
-        # check if all components have finished
-        if not continueRoutine:  # a component has requested a forced-end of Routine
-            routineForceEnded = True
-            break
-        continueRoutine = False  # will revert to True if at least one component still running
-        for thisComponent in feedbackComponents:
-            if hasattr(thisComponent, "status") and thisComponent.status != FINISHED:
-                continueRoutine = True
-                break  # at least one component has not yet finished
-        
-        # refresh the screen
-        if continueRoutine:  # don't flip if this routine is over or we'll get a blank screen
-            win.flip()
-    
-    # --- Ending Routine "feedback" ---
-    for thisComponent in feedbackComponents:
-        if hasattr(thisComponent, "setAutoDraw"):
-            thisComponent.setAutoDraw(False)
-    # using non-slip timing so subtract the expected duration of this Routine (unless ended on request)
-    if routineForceEnded:
+        win.flip()
+        # the Routine "chess_puzzle" was not non-slip safe, so reset the non-slip timer
         routineTimer.reset()
-    else:
-        routineTimer.addTime(-1.000000)
+        thisExp.nextEntry()
+        
+    # completed 1.0 repeats of 'chess_trials'
+    
     thisExp.nextEntry()
     
-# completed 1.0 repeats of 'chess_trials'
+# completed 1.0 repeats of 'chess_levels'
 
 
 # --- Prepare to start Routine "instructions_two_back" ---
@@ -917,8 +1058,6 @@ while continueRoutine:
         text_2.tStart = t  # local t and not account for scr refresh
         text_2.tStartRefresh = tThisFlipGlobal  # on global time
         win.timeOnFlip(text_2, 'tStartRefresh')  # time at next scr refresh
-        # add timestamp to datafile
-        thisExp.timestampOnFlip(win, 'text_2.started')
         text_2.setAutoDraw(True)
     
     # *press_to_continue* updates
@@ -929,8 +1068,6 @@ while continueRoutine:
         press_to_continue.tStart = t  # local t and not account for scr refresh
         press_to_continue.tStartRefresh = tThisFlipGlobal  # on global time
         win.timeOnFlip(press_to_continue, 'tStartRefresh')  # time at next scr refresh
-        # add timestamp to datafile
-        thisExp.timestampOnFlip(win, 'press_to_continue.started')
         press_to_continue.status = STARTED
         # keyboard checking is just starting
         waitOnFlip = True
@@ -967,13 +1104,6 @@ while continueRoutine:
 for thisComponent in instructions_two_backComponents:
     if hasattr(thisComponent, "setAutoDraw"):
         thisComponent.setAutoDraw(False)
-# check responses
-if press_to_continue.keys in ['', [], None]:  # No response was made
-    press_to_continue.keys = None
-thisExp.addData('press_to_continue.keys',press_to_continue.keys)
-if press_to_continue.keys != None:  # we had a response
-    thisExp.addData('press_to_continue.rt', press_to_continue.rt)
-thisExp.nextEntry()
 # the Routine "instructions_two_back" was not non-slip safe, so reset the non-slip timer
 routineTimer.reset()
 
@@ -1034,8 +1164,6 @@ for thisTrials_two_back in trials_two_back:
             fixation.tStart = t  # local t and not account for scr refresh
             fixation.tStartRefresh = tThisFlipGlobal  # on global time
             win.timeOnFlip(fixation, 'tStartRefresh')  # time at next scr refresh
-            # add timestamp to datafile
-            thisExp.timestampOnFlip(win, 'fixation.started')
             fixation.setAutoDraw(True)
         if fixation.status == STARTED:
             # is it time to stop? (based on global clock, using actual start)
@@ -1043,8 +1171,6 @@ for thisTrials_two_back in trials_two_back:
                 # keep track of stop time/frame for later
                 fixation.tStop = t  # not accounting for scr refresh
                 fixation.frameNStop = frameN  # exact frame index
-                # add timestamp to datafile
-                thisExp.timestampOnFlip(win, 'fixation.stopped')
                 fixation.setAutoDraw(False)
         
         # *letter* updates

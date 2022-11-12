@@ -7,7 +7,7 @@
     <Param val="auto" valType="str" updates="None" name="Data file delimiter"/>
     <Param val="u'data/%s_%s_%s' % (expInfo['participant'], expName, expInfo['date'])" valType="code" updates="None" name="Data filename"/>
     <Param val="True" valType="bool" updates="None" name="Enable Escape"/>
-    <Param val="{'participant': 'f&quot;{randint(0, 999999):06.0f}&quot;', 'session': '001'}" valType="code" updates="None" name="Experiment info"/>
+    <Param val="{'participant': 'f&quot;{randint(0, 999999):06.0f}&quot;', 'participant_elo': '1600'}" valType="code" updates="None" name="Experiment info"/>
     <Param val="True" valType="bool" updates="None" name="Force stereo"/>
     <Param val="False" valType="bool" updates="None" name="Full-screen window"/>
     <Param val="" valType="str" updates="None" name="HTML path"/>
@@ -99,9 +99,9 @@
         <Param val="never" valType="str" updates="constant" name="forceEndRoutineOnPress"/>
         <Param val="mouse" valType="code" updates="None" name="name"/>
         <Param val="True" valType="bool" updates="constant" name="newClicksOnly"/>
-        <Param val="on click" valType="str" updates="None" name="saveMouseState"/>
-        <Param val="name," valType="list" updates="constant" name="saveParamsClickable"/>
-        <Param val="True" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="never" valType="str" updates="None" name="saveMouseState"/>
+        <Param val="" valType="list" updates="constant" name="saveParamsClickable"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
         <Param val="" valType="code" updates="None" name="startEstim"/>
         <Param val="time (s)" valType="str" updates="None" name="startType"/>
         <Param val="0" valType="code" updates="None" name="startVal"/>
@@ -126,7 +126,7 @@
         <Param val="" valType="num" updates="constant" name="opacity"/>
         <Param val="0" valType="num" updates="constant" name="ori"/>
         <Param val="(0, 0)" valType="list" updates="constant" name="pos"/>
-        <Param val="True" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
         <Param val="(1, 1)" valType="list" updates="constant" name="size"/>
         <Param val="" valType="code" updates="None" name="startEstim"/>
         <Param val="time (s)" valType="str" updates="None" name="startType"/>
@@ -143,14 +143,14 @@
         <Param val="" valType="extendedCode" updates="constant" name="Begin Experiment"/>
         <Param val="" valType="extendedCode" updates="constant" name="Begin JS Experiment"/>
         <Param val="myPics = [chess_knight];&amp;#10;" valType="extendedCode" updates="constant" name="Begin JS Routine"/>
-        <Param val="# Begin Routine&amp;#10;&amp;#10;# Initialize board state and piece arrays&amp;#10;board_state = [['' for i in range(12)] for i in range(9)]&amp;#10;white_pieces = []&amp;#10;black_pieces = []&amp;#10;&amp;#10;# Chess board from chess library&amp;#10;&amp;#10;board_lib = chess.Board()&amp;#10;board_lib.set_fen(FEN)&amp;#10;&amp;#10;# For testing: sample FEN string&amp;#10;fen_str = FEN&amp;#10;fen = fen_str.split(&quot; &quot;)&amp;#10;&amp;#10;moves_str = moves&amp;#10;moves = moves_str.split()&amp;#10;&amp;#10;# Populate the board based on the FEN&amp;#10;white_pieces, black_pieces, board_state = create_pieces(fen, board_state)&amp;#10;clicked_piece = None&amp;#10;&amp;#10;player_pieces = []&amp;#10;enemy_pieces = []&amp;#10;&amp;#10;# Identify player and enemy&amp;#10;if fen[1] == &quot;b&quot;:&amp;#10;    player_pieces = white_pieces&amp;#10;    enemy_pieces = black_pieces&amp;#10;elif fen[1] == &quot;w&quot;:&amp;#10;    player_pieces = black_pieces&amp;#10;    enemy_pieces = white_pieces&amp;#10;else:&amp;#10;    raise Exception(&quot;ERROR: FEN does not have team label.&quot;)&amp;#10;&amp;#10;&amp;#10;# Set up first computer move&amp;#10;enemy_move = True&amp;#10;move_num = 0&amp;#10;    &amp;#10;moving_piece, start_coord, end_coord, highlight_squares = start_enemy_move(moves, move_num, board_state, enemy_pieces)&amp;#10;&amp;#10;# Initialize computer movement clock&amp;#10;move_clock = core.Clock()&amp;#10;move_clock.reset(newT=0.0)&amp;#10;&amp;#10;# Start mouse clock&amp;#10;# This is for a click cooldown to prevent accidental double-clicking&amp;#10;mouse_clock = core.Clock()&amp;#10;mouse_clock.addTime(100)&amp;#10;&amp;#10;# Track correct/incorrect moves&amp;#10;player_move_start = []&amp;#10;possible_moves = []&amp;#10;correct_move = True&amp;#10;&amp;#10;puzzle_clock = core.Clock()&amp;#10;puzzle_time = puzzle_clock.getTime()&amp;#10;&amp;#10;timeout_clock = core.Clock()&amp;#10;timout_time = 0&amp;#10;timeout = False&amp;#10;&amp;#10;feedback_text = ''   &amp;#10;&amp;#10;&amp;#10;&amp;#10;&amp;#10;&amp;#10;" valType="extendedCode" updates="constant" name="Begin Routine"/>
+        <Param val="# Begin Routine&amp;#10;&amp;#10;# Initialize board state and piece arrays&amp;#10;board_state = [['' for i in range(12)] for i in range(9)]&amp;#10;white_pieces = []&amp;#10;black_pieces = []&amp;#10;&amp;#10;# Chess board from chess library&amp;#10;&amp;#10;board_lib = chess.Board()&amp;#10;board_lib.set_fen(FEN)&amp;#10;&amp;#10;# For testing: sample FEN string&amp;#10;fen_str = FEN&amp;#10;fen = fen_str.split(&quot; &quot;)&amp;#10;&amp;#10;moves_str = moves&amp;#10;moves = moves_str.split()&amp;#10;&amp;#10;# Populate the board based on the FEN&amp;#10;white_pieces, black_pieces, board_state = create_pieces(fen, board_state)&amp;#10;clicked_piece = None&amp;#10;&amp;#10;player_pieces = []&amp;#10;enemy_pieces = []&amp;#10;&amp;#10;# Identify player and enemy&amp;#10;if fen[1] == &quot;b&quot;:&amp;#10;    player_pieces = white_pieces&amp;#10;    enemy_pieces = black_pieces&amp;#10;elif fen[1] == &quot;w&quot;:&amp;#10;    player_pieces = black_pieces&amp;#10;    enemy_pieces = white_pieces&amp;#10;else:&amp;#10;    raise Exception(&quot;ERROR: FEN does not have team label.&quot;)&amp;#10;&amp;#10;&amp;#10;# Set up first computer move&amp;#10;enemy_move = True&amp;#10;move_num = 0&amp;#10;    &amp;#10;moving_piece, start_coord, end_coord, highlight_squares = start_enemy_move(moves, move_num, board_state, enemy_pieces)&amp;#10;&amp;#10;# Initialize computer movement clock&amp;#10;move_clock = core.Clock()&amp;#10;move_clock.reset(newT=0.0)&amp;#10;&amp;#10;# Start mouse clock&amp;#10;# This is for a click cooldown to prevent accidental double-clicking&amp;#10;mouse_clock = core.Clock()&amp;#10;mouse_clock.addTime(100)&amp;#10;&amp;#10;# Track correct/incorrect moves&amp;#10;player_move_start = []&amp;#10;possible_moves = []&amp;#10;correct_move = True&amp;#10;&amp;#10;#global global_clock&amp;#10;&amp;#10;puzzle_clock = core.Clock()&amp;#10;puzzle_time = puzzle_clock.getTime()&amp;#10;&amp;#10;timeout_clock = core.Clock()&amp;#10;timout_time = 0&amp;#10;timeout = False&amp;#10;&amp;#10;feedback_text = ''   &amp;#10;chess_feedback.text = feedback_text&amp;#10;&amp;#10;&amp;#10;&amp;#10;&amp;#10;" valType="extendedCode" updates="constant" name="Begin Routine"/>
         <Param val="Py" valType="str" updates="None" name="Code Type"/>
-        <Param val="# Each Frame&amp;#10;&amp;#10;puzzle_time = puzzle_clock.getTime()&amp;#10;&amp;#10;if timeout:&amp;#10;    timeout_time = timeout_clock.getTime()&amp;#10;    if timeout_time &gt; 2:&amp;#10;        continueRoutine = False&amp;#10;elif puzzle_time &gt; 30:&amp;#10;    feedback_text = &quot;Out of time&quot;&amp;#10;    chess_feedback.text = feedback_text&amp;#10;    chess_feedback.color = incorrect_color&amp;#10;    &amp;#10;    timeout_clock.reset()&amp;#10;    timeout = True&amp;#10;else:&amp;#10;    puzzle_timer.text = str(round(puzzle_time))&amp;#10;&amp;#10;# Code executed if a piece is crrently being&amp;#10;# moved by the computer&amp;#10;if moving_piece is not None:&amp;#10;    time_elapsed = move_clock.getTime()&amp;#10;    moving_piece, move_finished = move_piece(time_elapsed, moving_piece, start_coord, end_coord, move_time)&amp;#10;    if move_finished:&amp;#10;        piece_taken = evaluate_move(board_state, enemy_pieces, player_pieces, end_coord)&amp;#10;        &amp;#10;        board_state = update_board_state(board_state, start_coord, end_coord, moving_piece.name)&amp;#10;        &amp;#10;        if end_coord[0] &lt; 9: # Not moving piece off board&amp;#10;            board_lib = make_uci_move(board_lib, start_coord, end_coord)&amp;#10;        &amp;#10;        # Reset clock&amp;#10;        move_clock.reset()&amp;#10;        &amp;#10;        if enemy_move:&amp;#10;            move_num = move_num + 1&amp;#10;            enemy_move = False&amp;#10;            &amp;#10;        if piece_taken:&amp;#10;            take_coord = find_empty_take_square(board_state) # Create function to get empty coord&amp;#10;            moving_piece, start_coord, end_coord = begin_move(piece_taken, end_coord, take_coord)&amp;#10;        else:&amp;#10;            moving_piece = None&amp;#10;&amp;#10;# Check mouse click cooldown&amp;#10;cooldown = mouse_clock.getTime() &lt; 0.1&amp;#10;&amp;#10;if not timeout:&amp;#10;    # Check for piece selection&amp;#10;    if clicked_piece is None and moving_piece is None:&amp;#10;        for piece in player_pieces:                # for each pic&amp;#10;            if not cooldown and mouse.isPressedIn(piece, buttons=[0]):    # If the picture is currently click&amp;#10;                clicked_piece = piece&amp;#10;                player_move_start = pos_to_coord(clicked_piece.pos)&amp;#10;                mouse_clock.reset()&amp;#10;                &amp;#10;                # Look for legal moves&amp;#10;                possible_moves = scan_legal_moves(board_lib, clicked_piece)&amp;#10;                valid_move_highlights = draw_possible_moves(possible_moves)&amp;#10;                &amp;#10;    # Check for piece placement&amp;#10;    elif clicked_piece is not None:&amp;#10;        clicked_piece.pos = mouse.getPos()&amp;#10;        &amp;#10;        if not cooldown and mouse.isPressedIn(clicked_piece, buttons=[0]):&amp;#10;            snapped_coord = pos_to_coord(mouse.getPos())&amp;#10;            &amp;#10;            # See if move is a redeposit&amp;#10;            redeposit = False&amp;#10;            if snapped_coord == player_move_start:&amp;#10;                redeposit = True&amp;#10;            &amp;#10;            valid_move = check_valid_move(board_state, player_pieces, snapped_coord, possible_moves)&amp;#10;            &amp;#10;            if redeposit:&amp;#10;                clicked_piece.pos = coord_to_pos(snapped_coord)&amp;#10;                clicked_piece = None&amp;#10;                clear_pieces(valid_move_highlights)&amp;#10;&amp;#10;            elif valid_move:&amp;#10;        &amp;#10;                clicked_piece.pos = coord_to_pos(snapped_coord)&amp;#10;                piece_taken = evaluate_move(board_state, enemy_pieces, player_pieces, snapped_coord)&amp;#10;                &amp;#10;                clear_pieces(valid_move_highlights)&amp;#10;                &amp;#10;                # Reset clock&amp;#10;                move_clock.reset()&amp;#10;                &amp;#10;                board_state = update_board_state(board_state, player_move_start, snapped_coord, clicked_piece.name)&amp;#10;                board_lib = make_uci_move(board_lib, player_move_start, snapped_coord)&amp;#10;&amp;#10;                if piece_taken:&amp;#10;                    take_coord = find_empty_take_square(board_state)&amp;#10;                    moving_piece, start_coord, end_coord = begin_move(piece_taken, snapped_coord, take_coord)&amp;#10;                    &amp;#10;                clicked_piece = None&amp;#10;                &amp;#10;                # Check for correct move or end of puzzle&amp;#10;                correct_move = check_correct_move(move_num, moves, player_move_start, snapped_coord)&amp;#10;                &amp;#10;               &amp;#10;                if (correct_move == False) or (move_num == len(moves) - 1):&amp;#10;                    feedback_text = &quot;Correct&quot; if correct_move else &quot;Incorrect&quot;&amp;#10;                    chess_feedback.text = feedback_text&amp;#10;                    if correct_move:&amp;#10;                        chess_feedback.color = correct_color&amp;#10;                    else:&amp;#10;                        chess_feedback.color = incorrect_color&amp;#10;                        &amp;#10;                    timeout_clock.reset()&amp;#10;                    timeout = True&amp;#10;    #                chess_feedback.setAutoDraw(True)&amp;#10;                    &amp;#10;                    # Start timeout clock&amp;#10;    #                timeout_clock.reset()&amp;#10;                    &amp;#10;                else:&amp;#10;                    clear_pieces(highlight_squares)&amp;#10;                    move_num = move_num + 1&amp;#10;                    enemy_move = True&amp;#10;                    &amp;#10;            mouse_clock.reset()&amp;#10;            &amp;#10;    if (enemy_move) and (moving_piece is None):&amp;#10;        moving_piece, start_coord, end_coord, highlight_squares = start_enemy_move(moves, move_num, board_state, enemy_pieces)&amp;#10;&amp;#10;#if timeout_clock.getTime() &gt; 1:&amp;#10;    &amp;#10;" valType="extendedCode" updates="constant" name="Each Frame"/>
+        <Param val="# Each Frame&amp;#10;&amp;#10;puzzle_time = puzzle_clock.getTime()&amp;#10;global_time = global_clock.getTime()&amp;#10;&amp;#10;if timeout:&amp;#10;    timeout_time = timeout_clock.getTime()&amp;#10;    if timeout_time &gt; 2:&amp;#10;        continueRoutine = False&amp;#10;elif puzzle_time &gt; 30: # Puzzle timeout&amp;#10;    feedback_text = &quot;Out of time&quot;&amp;#10;    chess_feedback.text = feedback_text&amp;#10;    chess_feedback.color = incorrect_color&amp;#10;    &amp;#10;    timeout_clock.reset()&amp;#10;    timeout = True&amp;#10;    thisChess_trial[&quot;max_time&quot;] = 1&amp;#10;    &amp;#10;elif global_time &gt; 180: # Block timeout&amp;#10;    feedback_text = &quot;Out of time:\nBlock over&quot;&amp;#10;    chess_feedback.text = feedback_text&amp;#10;    chess_feedback.color = &quot;black&quot;&amp;#10;    &amp;#10;    timeout_clock.reset()&amp;#10;    timeout = True&amp;#10;    thisChess_trial[&quot;max_time&quot;] = 1&amp;#10;    chess_trials.finished = True&amp;#10;&amp;#10;# Update clock displays&amp;#10;puzzle_timer.text = time.strftime('%S', time.gmtime(30 - puzzle_time))&amp;#10;global_timer.text = time.strftime('%M:%S', time.gmtime(global_time))&amp;#10;&amp;#10;# Code executed if a piece is crrently being&amp;#10;# moved by the computer&amp;#10;if moving_piece is not None:&amp;#10;    time_elapsed = move_clock.getTime()&amp;#10;    moving_piece, move_finished = move_piece(time_elapsed, moving_piece, start_coord, end_coord, move_time)&amp;#10;    if move_finished:&amp;#10;        piece_taken = evaluate_move(board_state, enemy_pieces, player_pieces, end_coord)&amp;#10;        &amp;#10;        board_state = update_board_state(board_state, start_coord, end_coord, moving_piece.name)&amp;#10;        &amp;#10;        if end_coord[0] &lt; 9: # Not moving piece off board&amp;#10;            board_lib = make_uci_move(board_lib, start_coord, end_coord)&amp;#10;        &amp;#10;        # Reset clock&amp;#10;        move_clock.reset()&amp;#10;        &amp;#10;        if enemy_move:&amp;#10;            move_num = move_num + 1&amp;#10;            enemy_move = False&amp;#10;            &amp;#10;        if piece_taken:&amp;#10;            take_coord = find_empty_take_square(board_state) # Create function to get empty coord&amp;#10;            moving_piece, start_coord, end_coord = begin_move(piece_taken, end_coord, take_coord)&amp;#10;        else:&amp;#10;            moving_piece = None&amp;#10;&amp;#10;# Check mouse click cooldown&amp;#10;cooldown = mouse_clock.getTime() &lt; 0.1&amp;#10;&amp;#10;if not timeout:&amp;#10;    # Check for piece selection&amp;#10;    if clicked_piece is None and moving_piece is None:&amp;#10;        for piece in player_pieces:                # for each pic&amp;#10;            if not cooldown and mouse.isPressedIn(piece, buttons=[0]):    # If the picture is currently click&amp;#10;                clicked_piece = piece&amp;#10;                player_move_start = pos_to_coord(clicked_piece.pos)&amp;#10;                mouse_clock.reset()&amp;#10;                &amp;#10;                # Look for legal moves&amp;#10;                possible_moves = scan_legal_moves(board_lib, clicked_piece)&amp;#10;                valid_move_highlights = draw_possible_moves(possible_moves)&amp;#10;                &amp;#10;    # Check for piece placement&amp;#10;    elif clicked_piece is not None:&amp;#10;        clicked_piece.pos = mouse.getPos()&amp;#10;        &amp;#10;        if not cooldown and mouse.isPressedIn(clicked_piece, buttons=[0]):&amp;#10;            snapped_coord = pos_to_coord(mouse.getPos())&amp;#10;            &amp;#10;            # See if move is a redeposit&amp;#10;            redeposit = False&amp;#10;            if snapped_coord == player_move_start:&amp;#10;                redeposit = True&amp;#10;            &amp;#10;            valid_move = check_valid_move(board_state, player_pieces, snapped_coord, possible_moves)&amp;#10;            &amp;#10;            if redeposit:&amp;#10;                clicked_piece.pos = coord_to_pos(snapped_coord)&amp;#10;                clicked_piece = None&amp;#10;                clear_pieces(valid_move_highlights)&amp;#10;&amp;#10;            elif valid_move:&amp;#10;        &amp;#10;                clicked_piece.pos = coord_to_pos(snapped_coord)&amp;#10;                piece_taken = evaluate_move(board_state, enemy_pieces, player_pieces, snapped_coord)&amp;#10;                &amp;#10;                clear_pieces(valid_move_highlights)&amp;#10;                &amp;#10;                # Reset clock&amp;#10;                move_clock.reset()&amp;#10;                &amp;#10;                board_state = update_board_state(board_state, player_move_start, snapped_coord, clicked_piece.name)&amp;#10;                board_lib = make_uci_move(board_lib, player_move_start, snapped_coord)&amp;#10;&amp;#10;                if piece_taken:&amp;#10;                    take_coord = find_empty_take_square(board_state)&amp;#10;                    moving_piece, start_coord, end_coord = begin_move(piece_taken, snapped_coord, take_coord)&amp;#10;                    &amp;#10;                clicked_piece = None&amp;#10;                &amp;#10;                # Check for correct move or end of puzzle&amp;#10;                correct_move = check_correct_move(move_num, moves, player_move_start, snapped_coord)&amp;#10;                &amp;#10;               &amp;#10;                if (correct_move == False) or (move_num == len(moves) - 1):&amp;#10;                    feedback_text = &quot;Correct&quot; if correct_move else &quot;Incorrect&quot;&amp;#10;                    chess_feedback.text = feedback_text&amp;#10;                    if correct_move:&amp;#10;                        chess_feedback.color = correct_color&amp;#10;                    else:&amp;#10;                        chess_feedback.color = incorrect_color&amp;#10;                        &amp;#10;                    timeout_clock.reset()&amp;#10;                    timeout = True&amp;#10;    #                chess_feedback.setAutoDraw(True)&amp;#10;                    &amp;#10;                    # Start timeout clock&amp;#10;    #                timeout_clock.reset()&amp;#10;                    &amp;#10;                else:&amp;#10;                    clear_pieces(highlight_squares)&amp;#10;                    move_num = move_num + 1&amp;#10;                    enemy_move = True&amp;#10;                    &amp;#10;            mouse_clock.reset()&amp;#10;            &amp;#10;    if (enemy_move) and (moving_piece is None):&amp;#10;        moving_piece, start_coord, end_coord, highlight_squares = start_enemy_move(moves, move_num, board_state, enemy_pieces)&amp;#10;&amp;#10;#if timeout_clock.getTime() &gt; 1:&amp;#10;    &amp;#10;" valType="extendedCode" updates="constant" name="Each Frame"/>
         <Param val="/* Syntax Error: Fix Python code */" valType="extendedCode" updates="constant" name="Each JS Frame"/>
         <Param val="" valType="extendedCode" updates="constant" name="End Experiment"/>
         <Param val="" valType="extendedCode" updates="constant" name="End JS Experiment"/>
         <Param val="" valType="extendedCode" updates="constant" name="End JS Routine"/>
-        <Param val="&amp;#10;#chess_feedback.setAutoDraw(False)&amp;#10;&amp;#10;feedback_text = ''   &amp;#10;chess_feedback.text = feedback_text&amp;#10;&amp;#10;clear_pieces(white_pieces)&amp;#10;clear_pieces(black_pieces)&amp;#10;clear_pieces(highlight_squares)&amp;#10;&amp;#10;win.flip()" valType="extendedCode" updates="constant" name="End Routine"/>
+        <Param val="&amp;#10;# Set trial data&amp;#10;if feedback_text == &quot;Correct&quot;:&amp;#10;    thisChess_trial[&quot;correct_answer&quot;] = 1&amp;#10;else:&amp;#10;    thisChess_trial[&quot;correct_answer&quot;] = 0&amp;#10;    &amp;#10;if thisChess_trial[&quot;timed_out&quot;] is not 1:&amp;#10;    thisChess_trial[&quot;timed_out&quot;] = 0&amp;#10;    &amp;#10;&amp;#10;clear_pieces(white_pieces)&amp;#10;clear_pieces(black_pieces)&amp;#10;clear_pieces(highlight_squares)&amp;#10;&amp;#10;win.flip()" valType="extendedCode" updates="constant" name="End Routine"/>
         <Param val="False" valType="bool" updates="None" name="disabled"/>
         <Param val="move_piece" valType="code" updates="None" name="name"/>
       </CodeComponent>
@@ -167,8 +167,8 @@
         <Param val="chess_feedback" valType="code" updates="None" name="name"/>
         <Param val="" valType="num" updates="constant" name="opacity"/>
         <Param val="0" valType="num" updates="constant" name="ori"/>
-        <Param val="(-6/8, 0)" valType="list" updates="constant" name="pos"/>
-        <Param val="True" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="(-5/8, 0)" valType="list" updates="constant" name="pos"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
         <Param val="" valType="code" updates="None" name="startEstim"/>
         <Param val="time (s)" valType="str" updates="None" name="startType"/>
         <Param val="0.0" valType="code" updates="None" name="startVal"/>
@@ -192,8 +192,8 @@
         <Param val="puzzle_timer" valType="code" updates="None" name="name"/>
         <Param val="" valType="num" updates="constant" name="opacity"/>
         <Param val="0" valType="num" updates="constant" name="ori"/>
-        <Param val="(-6/8, 3/8)" valType="list" updates="constant" name="pos"/>
-        <Param val="True" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="(-5/8, 2/8)" valType="list" updates="constant" name="pos"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
         <Param val="" valType="code" updates="None" name="startEstim"/>
         <Param val="time (s)" valType="str" updates="None" name="startType"/>
         <Param val="0.0" valType="code" updates="None" name="startVal"/>
@@ -201,6 +201,31 @@
         <Param val="" valType="code" updates="constant" name="stopVal"/>
         <Param val="True" valType="bool" updates="None" name="syncScreenRefresh"/>
         <Param val="$puzzle_time" valType="str" updates="constant" name="text"/>
+        <Param val="from exp settings" valType="str" updates="None" name="units"/>
+        <Param val="" valType="num" updates="constant" name="wrapWidth"/>
+      </TextComponent>
+      <TextComponent name="global_timer">
+        <Param val="white" valType="color" updates="constant" name="color"/>
+        <Param val="rgb" valType="str" updates="constant" name="colorSpace"/>
+        <Param val="1" valType="num" updates="constant" name="contrast"/>
+        <Param val="False" valType="bool" updates="None" name="disabled"/>
+        <Param val="" valType="code" updates="None" name="durationEstim"/>
+        <Param val="None" valType="str" updates="constant" name="flip"/>
+        <Param val="Open Sans" valType="str" updates="constant" name="font"/>
+        <Param val="LTR" valType="str" updates="None" name="languageStyle"/>
+        <Param val="0.05" valType="num" updates="constant" name="letterHeight"/>
+        <Param val="global_timer" valType="code" updates="None" name="name"/>
+        <Param val="" valType="num" updates="constant" name="opacity"/>
+        <Param val="0" valType="num" updates="constant" name="ori"/>
+        <Param val="(-5/8, 3/8)" valType="list" updates="constant" name="pos"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="" valType="code" updates="None" name="startEstim"/>
+        <Param val="time (s)" valType="str" updates="None" name="startType"/>
+        <Param val="0.0" valType="code" updates="None" name="startVal"/>
+        <Param val="duration (s)" valType="str" updates="None" name="stopType"/>
+        <Param val="" valType="code" updates="constant" name="stopVal"/>
+        <Param val="True" valType="bool" updates="None" name="syncScreenRefresh"/>
+        <Param val="" valType="str" updates="constant" name="text"/>
         <Param val="from exp settings" valType="str" updates="None" name="units"/>
         <Param val="" valType="num" updates="constant" name="wrapWidth"/>
       </TextComponent>
@@ -220,7 +245,7 @@
         <Param val="" valType="num" updates="constant" name="opacity"/>
         <Param val="0" valType="num" updates="constant" name="ori"/>
         <Param val="(0, 0)" valType="list" updates="constant" name="pos"/>
-        <Param val="True" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
         <Param val="" valType="code" updates="None" name="startEstim"/>
         <Param val="time (s)" valType="str" updates="None" name="startType"/>
         <Param val="0.0" valType="code" updates="None" name="startVal"/>
@@ -290,7 +315,7 @@
         <Param val="" valType="num" updates="constant" name="opacity"/>
         <Param val="0" valType="num" updates="constant" name="ori"/>
         <Param val="(0, 0)" valType="list" updates="constant" name="pos"/>
-        <Param val="True" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
         <Param val="" valType="code" updates="None" name="startEstim"/>
         <Param val="time (s)" valType="str" updates="None" name="startType"/>
         <Param val="0.0" valType="code" updates="None" name="startVal"/>
@@ -309,19 +334,19 @@
         <Param val="" valType="code" updates="None" name="durationEstim"/>
         <Param val="True" valType="bool" updates="constant" name="forceEndRoutine"/>
         <Param val="press_to_continue" valType="code" updates="None" name="name"/>
-        <Param val="True" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
         <Param val="" valType="code" updates="None" name="startEstim"/>
         <Param val="time (s)" valType="str" updates="None" name="startType"/>
         <Param val="0.0" valType="code" updates="None" name="startVal"/>
         <Param val="duration (s)" valType="str" updates="None" name="stopType"/>
         <Param val="" valType="code" updates="constant" name="stopVal"/>
-        <Param val="last key" valType="str" updates="constant" name="store"/>
+        <Param val="nothing" valType="str" updates="constant" name="store"/>
         <Param val="False" valType="bool" updates="constant" name="storeCorrect"/>
         <Param val="True" valType="bool" updates="constant" name="syncScreenRefresh"/>
       </KeyboardComponent>
     </Routine>
     <Routine name="instructions_chess_puzzle">
-      <TextComponent name="chess_instructions_1">
+      <TextComponent name="chess_instructions">
         <Param val="-1.0000, -1.0000, -1.0000" valType="color" updates="constant" name="color"/>
         <Param val="rgb" valType="str" updates="constant" name="colorSpace"/>
         <Param val="1" valType="num" updates="constant" name="contrast"/>
@@ -331,39 +356,56 @@
         <Param val="Open Sans" valType="str" updates="constant" name="font"/>
         <Param val="LTR" valType="str" updates="None" name="languageStyle"/>
         <Param val="0.05" valType="num" updates="constant" name="letterHeight"/>
-        <Param val="chess_instructions_1" valType="code" updates="None" name="name"/>
+        <Param val="chess_instructions" valType="code" updates="None" name="name"/>
         <Param val="" valType="num" updates="constant" name="opacity"/>
         <Param val="0" valType="num" updates="constant" name="ori"/>
         <Param val="(0, 0)" valType="list" updates="constant" name="pos"/>
-        <Param val="True" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
         <Param val="" valType="code" updates="None" name="startEstim"/>
         <Param val="time (s)" valType="str" updates="None" name="startType"/>
         <Param val="0.0" valType="code" updates="None" name="startVal"/>
         <Param val="duration (s)" valType="str" updates="None" name="stopType"/>
         <Param val="" valType="code" updates="constant" name="stopVal"/>
         <Param val="True" valType="bool" updates="None" name="syncScreenRefresh"/>
-        <Param val="Instructions slide&amp;#10;&amp;#10;Complete the chess puzzle" valType="str" updates="constant" name="text"/>
+        <Param val="Instructions slide&amp;#10;&amp;#10;Complete the chess puzzles." valType="str" updates="constant" name="text"/>
         <Param val="from exp settings" valType="str" updates="None" name="units"/>
         <Param val="" valType="num" updates="constant" name="wrapWidth"/>
       </TextComponent>
-      <KeyboardComponent name="next_routine_1">
+      <KeyboardComponent name="start_block">
         <Param val="'space'" valType="list" updates="constant" name="allowedKeys"/>
         <Param val="" valType="str" updates="constant" name="correctAns"/>
         <Param val="False" valType="bool" updates="None" name="disabled"/>
         <Param val="True" valType="bool" updates="constant" name="discard previous"/>
         <Param val="" valType="code" updates="None" name="durationEstim"/>
         <Param val="True" valType="bool" updates="constant" name="forceEndRoutine"/>
-        <Param val="next_routine_1" valType="code" updates="None" name="name"/>
-        <Param val="True" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="start_block" valType="code" updates="None" name="name"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
         <Param val="" valType="code" updates="None" name="startEstim"/>
         <Param val="time (s)" valType="str" updates="None" name="startType"/>
         <Param val="0.0" valType="code" updates="None" name="startVal"/>
         <Param val="duration (s)" valType="str" updates="None" name="stopType"/>
         <Param val="" valType="code" updates="constant" name="stopVal"/>
-        <Param val="last key" valType="str" updates="constant" name="store"/>
+        <Param val="nothing" valType="str" updates="constant" name="store"/>
         <Param val="False" valType="bool" updates="constant" name="storeCorrect"/>
         <Param val="True" valType="bool" updates="constant" name="syncScreenRefresh"/>
       </KeyboardComponent>
+      <CodeComponent name="global_timer_start">
+        <Param val="&amp;#10;## Initialize global clock var&amp;#10;global_clock = core.Clock()&amp;#10;global_time = 0" valType="extendedCode" updates="constant" name="Before Experiment"/>
+        <Param val="global_clock = new core.Clock();&amp;#10;" valType="extendedCode" updates="constant" name="Before JS Experiment"/>
+        <Param val="" valType="extendedCode" updates="constant" name="Begin Experiment"/>
+        <Param val="" valType="extendedCode" updates="constant" name="Begin JS Experiment"/>
+        <Param val="" valType="extendedCode" updates="constant" name="Begin JS Routine"/>
+        <Param val="" valType="extendedCode" updates="constant" name="Begin Routine"/>
+        <Param val="Py" valType="str" updates="None" name="Code Type"/>
+        <Param val="" valType="extendedCode" updates="constant" name="Each Frame"/>
+        <Param val="" valType="extendedCode" updates="constant" name="Each JS Frame"/>
+        <Param val="" valType="extendedCode" updates="constant" name="End Experiment"/>
+        <Param val="" valType="extendedCode" updates="constant" name="End JS Experiment"/>
+        <Param val="" valType="extendedCode" updates="constant" name="End JS Routine"/>
+        <Param val="&amp;#10;## Start clock for the block&amp;#10;global_clock.reset()" valType="extendedCode" updates="constant" name="End Routine"/>
+        <Param val="False" valType="bool" updates="None" name="disabled"/>
+        <Param val="global_timer_start" valType="code" updates="None" name="name"/>
+      </CodeComponent>
     </Routine>
     <Routine name="feedback">
       <TextComponent name="feedback_text_slide">
@@ -392,8 +434,65 @@
         <Param val="" valType="num" updates="constant" name="wrapWidth"/>
       </TextComponent>
     </Routine>
+    <Routine name="intro">
+      <TextComponent name="intro_text">
+        <Param val="black" valType="color" updates="constant" name="color"/>
+        <Param val="rgb" valType="str" updates="constant" name="colorSpace"/>
+        <Param val="1" valType="num" updates="constant" name="contrast"/>
+        <Param val="False" valType="bool" updates="None" name="disabled"/>
+        <Param val="" valType="code" updates="None" name="durationEstim"/>
+        <Param val="None" valType="str" updates="constant" name="flip"/>
+        <Param val="Open Sans" valType="str" updates="constant" name="font"/>
+        <Param val="LTR" valType="str" updates="None" name="languageStyle"/>
+        <Param val="0.05" valType="num" updates="constant" name="letterHeight"/>
+        <Param val="intro_text" valType="code" updates="None" name="name"/>
+        <Param val="" valType="num" updates="constant" name="opacity"/>
+        <Param val="0" valType="num" updates="constant" name="ori"/>
+        <Param val="(0, 0)" valType="list" updates="constant" name="pos"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="" valType="code" updates="None" name="startEstim"/>
+        <Param val="time (s)" valType="str" updates="None" name="startType"/>
+        <Param val="0.0" valType="code" updates="None" name="startVal"/>
+        <Param val="duration (s)" valType="str" updates="None" name="stopType"/>
+        <Param val="" valType="code" updates="constant" name="stopVal"/>
+        <Param val="True" valType="bool" updates="None" name="syncScreenRefresh"/>
+        <Param val="Welcome to the experiment." valType="str" updates="constant" name="text"/>
+        <Param val="from exp settings" valType="str" updates="None" name="units"/>
+        <Param val="" valType="num" updates="constant" name="wrapWidth"/>
+      </TextComponent>
+      <KeyboardComponent name="start_experiment">
+        <Param val="'space'" valType="list" updates="constant" name="allowedKeys"/>
+        <Param val="" valType="str" updates="constant" name="correctAns"/>
+        <Param val="False" valType="bool" updates="None" name="disabled"/>
+        <Param val="True" valType="bool" updates="constant" name="discard previous"/>
+        <Param val="" valType="code" updates="None" name="durationEstim"/>
+        <Param val="True" valType="bool" updates="constant" name="forceEndRoutine"/>
+        <Param val="start_experiment" valType="code" updates="None" name="name"/>
+        <Param val="False" valType="bool" updates="None" name="saveStartStop"/>
+        <Param val="" valType="code" updates="None" name="startEstim"/>
+        <Param val="time (s)" valType="str" updates="None" name="startType"/>
+        <Param val="0.0" valType="code" updates="None" name="startVal"/>
+        <Param val="duration (s)" valType="str" updates="None" name="stopType"/>
+        <Param val="" valType="code" updates="constant" name="stopVal"/>
+        <Param val="nothing" valType="str" updates="constant" name="store"/>
+        <Param val="False" valType="bool" updates="constant" name="storeCorrect"/>
+        <Param val="True" valType="bool" updates="constant" name="syncScreenRefresh"/>
+      </KeyboardComponent>
+    </Routine>
   </Routines>
   <Flow>
+    <Routine name="intro"/>
+    <LoopInitiator loopType="TrialHandler" name="chess_levels">
+      <Param name="Selected rows" updates="None" val="" valType="str"/>
+      <Param name="conditions" updates="None" val="[OrderedDict([('session', 1), ('difficulty', 500)]), OrderedDict([('session', 2), ('difficulty', 1600)]), OrderedDict([('session', 3), ('difficulty', 2500)])]" valType="str"/>
+      <Param name="conditionsFile" updates="None" val="conditions_chess_levels.tsv" valType="file"/>
+      <Param name="endPoints" updates="None" val="[0, 1]" valType="num"/>
+      <Param name="isTrials" updates="None" val="True" valType="bool"/>
+      <Param name="loopType" updates="None" val="sequential" valType="str"/>
+      <Param name="nReps" updates="None" val="1" valType="num"/>
+      <Param name="name" updates="None" val="chess_levels" valType="code"/>
+      <Param name="random seed" updates="None" val="" valType="code"/>
+    </LoopInitiator>
     <Routine name="instructions_chess_puzzle"/>
     <LoopInitiator loopType="TrialHandler" name="chess_trials">
       <Param name="Selected rows" updates="None" val="" valType="str"/>
@@ -408,6 +507,7 @@
     </LoopInitiator>
     <Routine name="chess_puzzle"/>
     <LoopTerminator name="chess_trials"/>
+    <LoopTerminator name="chess_levels"/>
     <Routine name="instructions_two_back"/>
     <LoopInitiator loopType="TrialHandler" name="trials_two_back">
       <Param name="Selected rows" updates="None" val="" valType="str"/>
