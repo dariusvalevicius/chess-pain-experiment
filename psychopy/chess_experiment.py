@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2022.2.4),
-    on November 12, 2022, at 16:38
+    on November 28, 2022, at 14:23
 If you publish work using this script the most relevant publication is:
 
     Peirce J, Gray JR, Simpson S, MacAskill M, Höchenberger R, Sogo H, Kastman E, Lindeløv JK. (2019) 
@@ -69,9 +69,9 @@ def code_to_coord(code):
 def coord_to_code(coord):
     '''Convert coord to UCI move code'''
     x_axis = ["a", "b", "c", "d", "e", "f", "g", "h"]
-    print(f"COORD: {coord}")
+#    print(f"COORD: {coord}")
     index = coord[0] - 1
-    print(f"INDEX: {index}")
+#    print(f"INDEX: {index}")
     x_code = x_axis[index]
     y_code = coord[1]
     return f"{x_code}{y_code}"
@@ -142,7 +142,7 @@ def search_pieces(piece_array, piece_name):
 
 def evaluate_move(board_state, enemy_pieces, player_pieces, target_square):
     '''See if player move is taking an enemy piece'''
-    print(target_square)
+#    print(target_square)
     target_square_content = board_state[target_square[1]][target_square[0]]
     if target_square_content:
         piece_to_take = search_pieces(enemy_pieces, target_square_content)
@@ -177,19 +177,11 @@ def update_board_state(board_state, old_coord, new_coord, value):
     if board_state[old_coord[1]][old_coord[0]] == value: # Only delete old entry if it has not already been replaced
         board_state[old_coord[1]][old_coord[0]] = ''
     
-    for row in board_state:
-        print(row)
+#    for row in board_state:
+#        print(row)
     
     return board_state
-    
-def make_uci_move(board_lib, start_coord, end_coord):
-    '''Update python chess board representation'''
-    uci_code = coord_to_code(start_coord) + coord_to_code(end_coord)
-    
-    move = chess.Move.from_uci(uci_code)
-    board_lib.push(move)  # Make the move
-    
-    return board_lib
+                       
         
 def clear_pieces(pieces):
     for piece in pieces:
@@ -285,7 +277,90 @@ def draw_possible_moves(possible_moves):
         valid_move_highlights.append(highlight)
         
     return valid_move_highlights
+    
+def check_uci_move(board_lib, start_coord, end_coord):
+    '''Update python chess board representation'''
+    uci_code = coord_to_code(start_coord) + coord_to_code(end_coord)
+    
+    move = chess.Move.from_uci(uci_code)
+    
+    castling_king = board_lib.is_kingside_castling(move)
+    castling_queen = board_lib.is_queenside_castling(move)
+
+    en_passant = board_lib.is_en_passant(move)
+    
+#    if move in board_lib.legal_moves:
+#        board_lib.push(move)  # Make the move
+#    else:
+#        print("Illegal move. May be a castling rook move.")
+#        print(f"Start coord: {start_coord}; End coord: {end_coord}")
         
+#    board_lib.push(move)  # Make the move
+    
+    return move, castling_king, castling_queen, en_passant
+    
+def make_en_passant_move(piece, white_pieces, black_pieces, board_state, end_coord):
+#    print("EN PASSANT MOVE")
+    target_square_content = []
+    piece_taken = []
+    if piece in white_pieces:
+        target_square_content = board_state[end_coord[1] - 1][end_coord[0]]
+        piece_taken = search_pieces(black_pieces, target_square_content)
+    elif piece in black_pieces:
+        target_square_content = board_state[end_coord[1] + 1][end_coord[0]]
+        piece_taken = search_pieces(white_pieces, target_square_content)
+#    print(f"PIECE TAKEN: {piece_taken.name}")
+    return piece_taken
+
+def try_pawn_promotion(piece, end_coord):
+    if end_coord[1] in [1, 8]:
+        if "P" in piece.name:
+            print("PAWN PROMOTION")
+            piece.image = "images/q_w.png"
+        elif "p" in piece.name:
+            print("PAWN PROMOTION")
+            piece.image = "images/q.png"
+    return None
+        
+def start_rook_castle(pieces, start_coord, end_coord):
+    '''Move rook to target square during castling move'''
+    
+    target_square_content = board_state[start_coord[1]][start_coord[0]]
+    
+#    for piece in pieces:
+#        print(f"Piece name: {piece.name}")
+#    print(f"Target square content: {target_square_content}")
+    
+    target_rook = search_pieces(pieces, target_square_content)
+    moving_piece, start_coord, end_coord = begin_move(target_rook, start_coord, end_coord)
+    
+    return moving_piece, start_coord, end_coord
+    
+def try_castling_move(castling_king, castling_queen, pieces, player_color):
+    moving_piece = None
+    start_coord = []
+    end_coord = []
+    
+    if castling_king:
+        print("CASTLING KINSIDE")
+        if player_color == "b":
+            # move rook g1e1
+            moving_piece, start_coord, end_coord = start_rook_castle(pieces, [8,1], [6,1])
+        elif player_color == "w":
+            # move rook a8c8
+            moving_piece, start_coord, end_coord = start_rook_castle(pieces, [8,8], [6,8])
+    elif castling_queen:
+        print("CASTLING QUEENSIDE")
+        if player_color == "b":
+            # move rook a1d1
+            moving_piece, start_coord, end_coord = start_rook_castle(pieces, [1,1], [4,1])
+        elif player_color == "w":
+            # move rook g8e8
+            moving_piece, start_coord, end_coord = start_rook_castle(pieces, [1,8], [4,8])
+        
+    return moving_piece, start_coord, end_coord
+    
+    
     
     
 feedback_text = ''   
@@ -301,16 +376,6 @@ piece_codes = ["p", "n", "b", "r", "q", "k", "P", "N", "B", "R", "Q", "K"]
 # Could instead make it a speed parameter
 move_time = 1
 
-## Valid moves per piece
-#p_moves = [[0,-1], [0,-2]]
-#n_moves = [[-2,1], [-1,2], [1,2], [2,1], [2,-1], [1,-2], [-1,-2], [-2,-1]]
-#b_moves = [["-inf","inf"], ["inf","inf"], ["inf","-inf"], ["-inf","-inf"]]
-#r_moves = [["-inf",0], [0,"inf"], ["inf",0], [0,"-inf"]]
-#q_moves = b_moves + r_moves
-#k_moves = [[-1,0], [-1,1], [0,1], [1,1], [1,0], [1,-1], [0,-1], [-1,1]]
-
-#P_moves = [[
-
 
 # Ensure that relative paths start from the same directory as this script
 _thisDir = os.path.dirname(os.path.abspath(__file__))
@@ -320,7 +385,7 @@ psychopyVersion = '2022.2.4'
 expName = 'chess_experiment'  # from the Builder filename that created this script
 expInfo = {
     'participant': f"{randint(0, 999999):06.0f}",
-    'elo': '1600',
+    'participant_elo': '1600',
 }
 # --- Show participant info dialog --
 dlg = gui.DlgFromDict(dictionary=expInfo, sortKeys=False, title=expName)
@@ -382,7 +447,7 @@ intro_text = visual.TextStim(win=win, name='intro_text',
     text='Welcome to the experiment.',
     font='Open Sans',
     pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
-    color='white', colorSpace='rgb', opacity=None, 
+    color='black', colorSpace='rgb', opacity=None, 
     languageStyle='LTR',
     depth=0.0);
 start_experiment = keyboard.Keyboard()
@@ -429,7 +494,7 @@ global_timer = visual.TextStim(win=win, name='global_timer',
     pos=(-5/8, 3/8), height=0.05, wrapWidth=None, ori=0.0, 
     color='white', colorSpace='rgb', opacity=None, 
     languageStyle='LTR',
-    depth=-4.0);
+    depth=-5.0);
 
 # --- Initialize components for Routine "instructions_two_back" ---
 text_2 = visual.TextStim(win=win, name='text_2',
@@ -500,13 +565,6 @@ while continueRoutine:
         intro_text.tStartRefresh = tThisFlipGlobal  # on global time
         win.timeOnFlip(intro_text, 'tStartRefresh')  # time at next scr refresh
         intro_text.setAutoDraw(True)
-    if intro_text.status == STARTED:
-        # is it time to stop? (based on global clock, using actual start)
-        if tThisFlipGlobal > intro_text.tStartRefresh + 1.0-frameTolerance:
-            # keep track of stop time/frame for later
-            intro_text.tStop = t  # not accounting for scr refresh
-            intro_text.frameNStop = frameN  # exact frame index
-            intro_text.setAutoDraw(False)
     
     # *start_experiment* updates
     waitOnFlip = False
@@ -717,11 +775,13 @@ for thisChess_level in chess_levels:
         player_pieces = []
         enemy_pieces = []
         
+        player_color = fen[1]
+        
         # Identify player and enemy
-        if fen[1] == "b":
+        if player_color == "b":
             player_pieces = white_pieces
             enemy_pieces = black_pieces
-        elif fen[1] == "w":
+        elif player_color == "w":
             player_pieces = black_pieces
             enemy_pieces = white_pieces
         else:
@@ -746,6 +806,7 @@ for thisChess_level in chess_levels:
         # Track correct/incorrect moves
         player_move_start = []
         possible_moves = []
+        valid_move_highlights = []
         correct_move = True
         
         #global global_clock
@@ -758,7 +819,9 @@ for thisChess_level in chess_levels:
         timeout = False
         
         feedback_text = ''   
+        chess_feedback.text = feedback_text
         
+        is_castling_move = False
         
         
         
@@ -822,6 +885,8 @@ for thisChess_level in chess_levels:
                 
                 timeout_clock.reset()
                 timeout = True
+                thisChess_trial["max_time"] = 1
+                
             elif global_time > 180: # Block timeout
                 feedback_text = "Out of time:\nBlock over"
                 chess_feedback.text = feedback_text
@@ -829,10 +894,11 @@ for thisChess_level in chess_levels:
                 
                 timeout_clock.reset()
                 timeout = True
+                thisChess_trial["max_time"] = 1
                 chess_trials.finished = True
             
             # Update clock displays
-            puzzle_timer.text = time.strftime('%S', time.gmtime(30 - puzzle_time))
+            puzzle_timer.text = time.strftime('%M:%S', time.gmtime(30 - puzzle_time))
             global_timer.text = time.strftime('%M:%S', time.gmtime(global_time))
             
             # Code executed if a piece is crrently being
@@ -841,12 +907,41 @@ for thisChess_level in chess_levels:
                 time_elapsed = move_clock.getTime()
                 moving_piece, move_finished = move_piece(time_elapsed, moving_piece, start_coord, end_coord, move_time)
                 if move_finished:
+                    
+                    # Check for castling
+                        # if piece is king or rook
+                            # and target is rook or king of same colour
+                                # swap places
+                    
                     piece_taken = evaluate_move(board_state, enemy_pieces, player_pieces, end_coord)
-                    
-                    board_state = update_board_state(board_state, start_coord, end_coord, moving_piece.name)
-                    
+                           
                     if end_coord[0] < 9: # Not moving piece off board
-                        board_lib = make_uci_move(board_lib, start_coord, end_coord)
+                        
+                        move, castling_king, castling_queen, en_passant = check_uci_move(board_lib, start_coord, end_coord)
+                        if not is_castling_move:
+                            board_lib.push(move)
+                        
+                        # En passant
+                        if en_passant:
+                            piece_taken = make_en_passant_move(moving_piece, white_pieces, black_pieces, board_state, end_coord)
+                        
+                        # Castling
+                        if castling_king or castling_queen:
+                            pieces = []
+                            if enemy_move:
+                                pieces = enemy_pieces
+                            else:
+                                pieces = player_pieces
+                            moving_piece, start_coord, end_coord = try_castling_move(castling_king, castling_queen, pieces, player_color)
+                            is_castling_move = True
+                        else:
+                            is_castling_move = False
+                            
+                        # Pawn promotion
+                        try_pawn_promotion(moving_piece, end_coord)
+                       
+                    # Update custom board state representation
+                    board_state = update_board_state(board_state, start_coord, end_coord, moving_piece.name)
                     
                     # Reset clock
                     move_clock.reset()
@@ -905,9 +1000,28 @@ for thisChess_level in chess_levels:
                             
                             # Reset clock
                             move_clock.reset()
-                            
+                                            
+                            if snapped_coord[0] < 9: # Not moving piece off board
+                                
+                                move, castling_king, castling_queen, en_passant = check_uci_move(board_lib, player_move_start, snapped_coord)
+                                if not is_castling_move:
+                                    board_lib.push(move)
+                                    
+                                # En passant
+                                if en_passant:
+                                    piece_taken = make_en_passant_move(clicked_piece, white_pieces, black_pieces, board_state, snapped_coord)
+                                
+                                # Castling
+                                if castling_king or castling_queen:
+                                    moving_piece, start_coord, end_coord = try_castling_move(castling_king, castling_queen, player_pieces, player_color)
+                                    is_castling_move = True
+                                else:
+                                    is_castling_move = False
+                                    
+                                # Pawn promotion
+                                try_pawn_promotion(clicked_piece, snapped_coord)
+                                
                             board_state = update_board_state(board_state, player_move_start, snapped_coord, clicked_piece.name)
-                            board_lib = make_uci_move(board_lib, player_move_start, snapped_coord)
             
                             if piece_taken:
                                 take_coord = find_empty_take_square(board_state)
@@ -929,10 +1043,6 @@ for thisChess_level in chess_levels:
                                     
                                 timeout_clock.reset()
                                 timeout = True
-                #                chess_feedback.setAutoDraw(True)
-                                
-                                # Start timeout clock
-                #                timeout_clock.reset()
                                 
                             else:
                                 clear_pieces(highlight_squares)
@@ -941,10 +1051,8 @@ for thisChess_level in chess_levels:
                                 
                         mouse_clock.reset()
                         
-                if (enemy_move) and (moving_piece is None):
+                if enemy_move and (moving_piece is None):
                     moving_piece, start_coord, end_coord, highlight_squares = start_enemy_move(moves, move_num, board_state, enemy_pieces)
-            
-            #if timeout_clock.getTime() > 1:
                 
             
             
@@ -1000,14 +1108,20 @@ for thisChess_level in chess_levels:
         # store data for chess_trials (TrialHandler)
         # Run 'End Routine' code from move_piece
         
-        #chess_feedback.setAutoDraw(False)
-        
-        feedback_text = ''   
-        chess_feedback.text = feedback_text
+        # Set trial data
+        if feedback_text == "Correct":
+            thisChess_trial["correct_answer"] = 1
+        else:
+            thisChess_trial["correct_answer"] = 0
+            
+        if thisChess_trial["timed_out"] is not 1:
+            thisChess_trial["timed_out"] = 0
+            
         
         clear_pieces(white_pieces)
         clear_pieces(black_pieces)
         clear_pieces(highlight_squares)
+        clear_pieces(valid_move_highlights)
         
         win.flip()
         # the Routine "chess_puzzle" was not non-slip safe, so reset the non-slip timer
