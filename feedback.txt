@@ -1,0 +1,89 @@
+
+
+    The board is not flipped when it ‘s black to play, really difficult to understand to position from Black’s perspective this way
+
+-> Will try to get this working. Adding a clause to invert the screen space position gets me most of the way there, but there are still some bugs to work out.
+
+
+
+    The piece pngs really need to be replaced with Jerome’s suggestions on the git
+
+-> Now in. I think they are too low res, is there a larger version?.
+-> 64x64 (OK) 128x128 (ideal)
+
+
+
+    The board tile colors are not different enough, and brown+brown is not a traditional setup for chess.
+
+-> Will change
+
+
+    The movements are VERY slow and you can't make your move while the piece is being moved off screen which is frustrating
+
+-> I sped up the piece movement (esp. for short distances), it still take about a second for pieces to move off the board, can speed it up further.
+
+
+    The font for the two-back seems very small although this might just be on my computer
+
+
+
+    If you pick up a piece that can’t legally play it feels like the game is broken
+
+-> Fixed, you can no longer pick up unplayable pieces (not the right fix)
+
+-> Some feedback for illegal moves or no playable moves (see Lichess)
+
+
+
+    I ran the full experiment and I had three chess blocks and a 2-back, but none of the chess blocks seem to correspond to the easy puzzles we had last time I did the experiment? They all have a bunch of pieces on the board and seemed to be on the same level (Jerome and I think it’s only flow, about 99% sure). From the output files it appears the three levels are implemented, but all the actual puzzles shown to the user have the same difficulty, no matter the difficulty level nor the user elo. Side question; how do we test a specific chess task in psychopy? Right now we're doing the whole experiment every time we test (in which all three tasks appear the same from the perspective of the user, whatever the input/user).
+
+-> Puzzle generation wasn't in yet. Should work now!
+-> Skipping to a particular difficulty will involve some extra code; I can add it for dev testing.
+-> Or edit conditions_chess_levels.txt
+
+
+
+    The clocks don’t have labels
+
+-> Added labels. Also made the global clock a countdown clock, like the puzzle clock (seemed to make more sense)
+
+
+
+    There’s a delay between the clock limit and the action (like 5 seconds) when it goes to 30 seconds or 3 minutes
+
+-> This is intentional, to give time to see feedback.
+-> 59 minute bug
+
+
+
+    You don’t highlight the initial square of the piece you are trying to move, which can be confusing because if you start a move and then change your mind, you don't know where to put the piece back.
+
+-> Will add
+
+
+    You do not need to display the capture pieces on the top right of the screen, just wasting time of the participant, it’s not a feature on lichess puzzles anyway.
+
+- Worth leaving in or not? I can take it out, will simplify the code for the game loop.
+-> Try taking out
+
+
+    When running out of time the clock seems to start counting down from 60 minutes.
+
+-> To fix
+
+
+=============
+To finish:
+=============
+
+    Outputs: When analyzing the output (csv file), we see that you create 3 blocks (meaning 3 difficulty sessions) with 3 block_diffuclties (Where are they defined?). We tried with 2 elos: 1600 and 2000 (we can see it in the output CSV column AH) but this does not modify the block_diffculty on column B which is not normal. You should get these elos from Jerome’s functions. Also, the puzzles selected are not the right ones, you are picking them always from the same flow set (which is not the right set for the 1600 participant by the way) so this is wrong. 
+
+
+
+    We do not understand the difference between columns O, P and Q in the output
+
+    We do not understand what columns N and R are doing
+
+    We do not understand the difference between columns S and T
+
+    The headers of the output csv columns are really not intuitive for data analysis. We think column U (“chess_trial.thisIndex”) represents a time but it is really not clear, is there documentation for this csv output?

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2022.2.4),
-    on December 01, 2022, at 16:19
+    on December 16, 2022, at 11:36
 If you publish work using this script the most relevant publication is:
 
     Peirce J, Gray JR, Simpson S, MacAskill M, Höchenberger R, Sogo H, Kastman E, Lindeløv JK. (2019) 
@@ -36,8 +36,12 @@ global_time = 0
 # Run 'Before Experiment' code from move_piece
 import time
 import chess
+import math
+import Generate_inputs as inputgen
 
-#player_color = ""
+first_mover = ""
+
+move_speed = 1
 
 def coord_to_pos(coord):
     '''Convert coordinate system to
@@ -51,11 +55,11 @@ def coord_to_pos(coord):
         for i in range(len(coord)):
             pos[i] = (coord[i]/8) - 9/16
            
-#    global player_color
-#    if player_color == "b":
-#        if type(pos) == list:
+#    global first_mover
+#    if first_mover == "w":
+#        if type(coord) == list and coord[0] < 9:
 #            pos = [i * -1 for i in pos]
-#        else:
+#        elif type(coord) == int and coord < 9:
 #            pos = pos * -1
     
     return pos
@@ -70,12 +74,12 @@ def pos_to_coord(pos):
         for i in range(len(pos)):
             coord[i] = int(round((pos[i] + 9/16) * 8))
             
-#    global player_color
-#    if player_color == "b":
-#        if type(coord) == list:
-#            coord = [i * -1 for i in coord]
-#        else:
-#            coord = coord * -1        
+#    global first_mover
+#    if first_mover == "w":
+#        if type(coord) == list and coord[0] < 9:
+#            coord = [9 - i for i in coord]
+#        elif type(coord) == int and coord < 9:
+#            coord = 9 - coord
             
     return coord
     
@@ -103,6 +107,30 @@ def lerp_position(start_pos, end_pos, fraction):
     current_pos = start_pos + (fraction * move_vector)
     return current_pos
     
+# function definition to compute magnitude o f the vector
+def magnitude(vector):
+    mag = math.sqrt(sum(pow(element, 2) for element in vector))
+    return mag
+    
+def move_piece(time_elapsed, piece, start_coord, end_coord):
+    '''Move piece by a certain amount this frame'''
+    start_pos = coord_to_pos(start_coord)
+    end_pos = coord_to_pos(end_coord)
+
+    vector = [end_pos[0] - start_pos[0], end_pos[1] - start_pos[1]]
+    distance = magnitude(vector)
+    
+    global move_speed
+    time_to_travel = distance / move_speed
+    
+    move_finished = False
+    if (time_elapsed < time_to_travel):
+        piece.pos = lerp_position(start_pos, end_pos, time_elapsed / time_to_travel)
+    else:
+        piece.pos = end_pos
+        move_finished = True
+    return piece, move_finished
+    
 def create_piece(code, x, y, i):
     '''Initialize and display a chess piece'''
     if code.islower():
@@ -112,7 +140,7 @@ def create_piece(code, x, y, i):
     x_pos = coord_to_pos(x)
     y_pos = coord_to_pos(y)
     piece = visual.ImageStim(win=win, name=(code + str(x) + str(y)), image=image_path, 
-    anchor="center", pos=(x_pos, y_pos), size=(1/10, 1/10), depth = (-10 - i),
+    anchor="center", pos=(x_pos, y_pos), size=(1/8, 1/8), depth = (-10 - i),
     texRes=128.0, interpolate=True)
     return piece
     
@@ -169,18 +197,6 @@ def evaluate_move(board_state, enemy_pieces, player_pieces, target_square):
         if piece_to_take is None:
             piece_to_take = search_pieces(player_pieces, target_square_content)
         return piece_to_take
-
-def move_piece(time_elapsed, piece, start_coord, end_coord, move_time):
-    '''Move piece by a certain amount this frame'''
-    start_pos = coord_to_pos(start_coord)
-    end_pos = coord_to_pos(end_coord)
-    move_finished = False
-    if (time_elapsed < move_time):
-        piece.pos = lerp_position(start_pos, end_pos, time_elapsed / move_time)
-    else:
-        piece.pos = end_pos
-        move_finished = True
-    return piece, move_finished
     
 def begin_move(piece, start_coord, end_coord):
     '''Initiate the computer movemement of a piece'''
@@ -489,11 +505,16 @@ mouse.mouseClock = core.Clock()
 chess_board = visual.ImageStim(
     win=win,
     name='chess_board', 
-    image='images/board_2.png', mask=None, anchor='center',
+    image='images/board_3.png', mask=None, anchor='center',
     ori=0.0, pos=(0, 0), size=(1, 1),
     color=[1,1,1], colorSpace='rgb', opacity=None,
     flipHoriz=False, flipVert=False,
     texRes=128.0, interpolate=True, depth=-1.0)
+# Run 'Begin Experiment' code from move_piece
+participant = int(expInfo['participant'])
+participant_elo = int(expInfo['participant_elo'])
+
+inputgen.create_subset(participant_elo, participant)
 chess_feedback = visual.TextStim(win=win, name='chess_feedback',
     text=feedback_text,
     font='Open Sans',
@@ -504,14 +525,14 @@ chess_feedback = visual.TextStim(win=win, name='chess_feedback',
 puzzle_timer = visual.TextStim(win=win, name='puzzle_timer',
     text=puzzle_time,
     font='Open Sans',
-    pos=(-5/8, 2/8), height=0.05, wrapWidth=None, ori=0.0, 
+    pos=(-5/8, 2/8), height=0.04, wrapWidth=None, ori=0.0, 
     color='white', colorSpace='rgb', opacity=None, 
     languageStyle='LTR',
     depth=-4.0);
 global_timer = visual.TextStim(win=win, name='global_timer',
     text=None,
     font='Open Sans',
-    pos=(-5/8, 3/8), height=0.05, wrapWidth=None, ori=0.0, 
+    pos=(-5/8, 3/8), height=0.04, wrapWidth=None, ori=0.0, 
     color='white', colorSpace='rgb', opacity=None, 
     languageStyle='LTR',
     depth=-5.0);
@@ -745,7 +766,7 @@ for thisChess_level in chess_levels:
     # set up handler to look after randomisation of conditions etc
     chess_trials = data.TrialHandler(nReps=1.0, method='random', 
         extraInfo=expInfo, originPath=-1,
-        trialList=data.importConditions('conditions_chess.tsv'),
+        trialList=data.importConditions(puzzle_set),
         seed=None, name='chess_trials')
     thisExp.addLoop(chess_trials)  # add the loop to the experiment
     thisChess_trial = chess_trials.trialList[0]  # so we can initialise stimuli with some values
@@ -781,11 +802,12 @@ for thisChess_level in chess_levels:
         board_lib = chess.Board()
         board_lib.set_fen(FEN)
         
-        # For testing: sample FEN string
+        # Set FEN from conditions file
         fen_str = FEN
         fen = fen_str.split(" ")
         
-        moves_str = moves
+        # Set Moves from conditions file
+        moves_str = Moves
         moves = moves_str.split()
         
         # Populate the board based on the FEN
@@ -795,13 +817,13 @@ for thisChess_level in chess_levels:
         player_pieces = []
         enemy_pieces = []
         
-        player_color = fen[1]
+        first_mover = fen[1]
         
         # Identify player and enemy
-        if player_color == "b":
+        if first_mover == "b":
             player_pieces = white_pieces
             enemy_pieces = black_pieces
-        elif player_color == "w":
+        elif first_mover == "w":
             player_pieces = black_pieces
             enemy_pieces = white_pieces
         else:
@@ -896,9 +918,9 @@ for thisChess_level in chess_levels:
             
             if timeout:
                 timeout_time = timeout_clock.getTime()
-                if timeout_time > 2:
+                if timeout_time >= 2:
                     continueRoutine = False
-            elif puzzle_time > 30: # Puzzle timeout
+            elif puzzle_time >= 30: # Puzzle timeout
                 feedback_text = "Out of time"
                 chess_feedback.text = feedback_text
                 chess_feedback.color = incorrect_color
@@ -907,7 +929,7 @@ for thisChess_level in chess_levels:
                 timeout = True
                 thisChess_trial["max_time"] = 1
                 
-            elif global_time > 180: # Block timeout
+            elif global_time >= 180: # Block timeout
                 feedback_text = "Out of time:\nBlock over"
                 chess_feedback.text = feedback_text
                 chess_feedback.color = "black"
@@ -918,14 +940,14 @@ for thisChess_level in chess_levels:
                 chess_trials.finished = True
             
             # Update clock displays
-            puzzle_timer.text = time.strftime('%M:%S', time.gmtime(30 - puzzle_time))
-            global_timer.text = time.strftime('%M:%S', time.gmtime(global_time))
+            puzzle_timer.text = time.strftime('Puzzle time:\n%M:%S', time.gmtime(30 - min(puzzle_time, 30)))
+            global_timer.text = time.strftime('Block time:\n%M:%S', time.gmtime(180 - min(global_time, 180)))
             
             # Code executed if a piece is crrently being
             # moved by the computer
             if moving_piece is not None:
                 time_elapsed = move_clock.getTime()
-                moving_piece, move_finished = move_piece(time_elapsed, moving_piece, start_coord, end_coord, move_time)
+                moving_piece, move_finished = move_piece(time_elapsed, moving_piece, start_coord, end_coord)
                 if move_finished:
                     
                     # Check for castling
@@ -991,6 +1013,10 @@ for thisChess_level in chess_levels:
                             # Look for legal moves
                             possible_moves = scan_legal_moves(board_lib, clicked_piece)
                             valid_move_highlights = draw_possible_moves(possible_moves)
+                            
+            #                if not possible_moves:
+            #                    # Do not pick up piece
+            #                    clicked_piece = None
                             
                 # Check for piece placement
                 elif clicked_piece is not None:
@@ -1152,8 +1178,6 @@ for thisChess_level in chess_levels:
         thisExp.nextEntry()
         
     # completed 1.0 repeats of 'chess_trials'
-    
-    thisExp.nextEntry()
     
 # completed 1.0 repeats of 'chess_levels'
 

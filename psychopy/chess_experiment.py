@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2022.2.4),
-    on November 28, 2022, at 14:23
+    on December 15, 2022, at 11:51
 If you publish work using this script the most relevant publication is:
 
     Peirce J, Gray JR, Simpson S, MacAskill M, Höchenberger R, Sogo H, Kastman E, Lindeløv JK. (2019) 
@@ -36,16 +36,29 @@ global_time = 0
 # Run 'Before Experiment' code from move_piece
 import time
 import chess
+import Generate_inputs as inputgen
+
+#player_color = ""
 
 def coord_to_pos(coord):
     '''Convert coordinate system to
     position (in units of screen height)'''
+    
+    
     if type(coord) == int:
         pos = (coord/8) - 9/16
     else:
         pos = [0, 0]
         for i in range(len(coord)):
             pos[i] = (coord[i]/8) - 9/16
+           
+#    global player_color
+#    if player_color == "b":
+#        if type(pos) == list:
+#            pos = [i * -1 for i in pos]
+#        else:
+#            pos = pos * -1
+    
     return pos
     
 def pos_to_coord(pos):
@@ -57,6 +70,14 @@ def pos_to_coord(pos):
         coord = [1, 1]
         for i in range(len(pos)):
             coord[i] = int(round((pos[i] + 9/16) * 8))
+            
+#    global player_color
+#    if player_color == "b":
+#        if type(coord) == list:
+#            coord = [i * -1 for i in coord]
+#        else:
+#            coord = coord * -1        
+            
     return coord
     
 def code_to_coord(code):
@@ -474,6 +495,8 @@ chess_board = visual.ImageStim(
     color=[1,1,1], colorSpace='rgb', opacity=None,
     flipHoriz=False, flipVert=False,
     texRes=128.0, interpolate=True, depth=-1.0)
+# Run 'Begin Experiment' code from move_piece
+inputgen.create_subset(participant_elo, participant)
 chess_feedback = visual.TextStim(win=win, name='chess_feedback',
     text=feedback_text,
     font='Open Sans',
@@ -946,7 +969,7 @@ for thisChess_level in chess_levels:
                     # Reset clock
                     move_clock.reset()
                     
-                    if enemy_move:
+                    if enemy_move and end_coord[0] < 9: # Not moving piece off board
                         move_num = move_num + 1
                         enemy_move = False
                         
@@ -1023,6 +1046,7 @@ for thisChess_level in chess_levels:
                                 
                             board_state = update_board_state(board_state, player_move_start, snapped_coord, clicked_piece.name)
             
+                            # If taking a piece, start movement of piece off board
                             if piece_taken:
                                 take_coord = find_empty_take_square(board_state)
                                 moving_piece, start_coord, end_coord = begin_move(piece_taken, snapped_coord, take_coord)
@@ -1033,6 +1057,7 @@ for thisChess_level in chess_levels:
                             correct_move = check_correct_move(move_num, moves, player_move_start, snapped_coord)
                             
                            
+                           # Check if wrong move or last move
                             if (correct_move == False) or (move_num == len(moves) - 1):
                                 feedback_text = "Correct" if correct_move else "Incorrect"
                                 chess_feedback.text = feedback_text
@@ -1044,6 +1069,7 @@ for thisChess_level in chess_levels:
                                 timeout_clock.reset()
                                 timeout = True
                                 
+                            # go to enemy move    
                             else:
                                 clear_pieces(highlight_squares)
                                 move_num = move_num + 1

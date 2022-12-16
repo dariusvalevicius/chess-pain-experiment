@@ -1,4 +1,4 @@
-block	block_difficulty
-1	500
-2	1600
-3	2500
+block	puzzle_set
+1	easy_set.tsv
+2	flow_set.tsv
+3	hard_set.tsv
