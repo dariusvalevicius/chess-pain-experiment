@@ -33,6 +33,10 @@
 
 -> Some feedback for illegal moves or no playable moves (see Lichess)
 
+-> home square for where you're moving from
+-> can also add a sprite to differentiate between taking a piece and an empty square
+--> valid move display is now the same as lichess
+
 
 
     I ran the full experiment and I had three chess blocks and a 2-back, but none of the chess blocks seem to correspond to the easy puzzles we had last time I did the experiment? They all have a bunch of pieces on the board and seemed to be on the same level (Jerome and I think it’s only flow, about 99% sure). From the output files it appears the three levels are implemented, but all the actual puzzles shown to the user have the same difficulty, no matter the difficulty level nor the user elo. Side question; how do we test a specific chess task in psychopy? Right now we're doing the whole experiment every time we test (in which all three tasks appear the same from the perspective of the user, whatever the input/user).
@@ -65,11 +69,12 @@
 
 - Worth leaving in or not? I can take it out, will simplify the code for the game loop.
 -> Try taking out
+-> It's now out
 
 
     When running out of time the clock seems to start counting down from 60 minutes.
 
--> To fix
+-> fixed!
 
 
 =============
