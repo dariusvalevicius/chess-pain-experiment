@@ -1,4 +1,4 @@
-block	puzzle_set
-1	easy_set.tsv
-2	flow_set.tsv
-3	hard_set.tsv
+block	puzzle_set	difficulty
+1	easy_set.tsv	Easy
+2	flow_set.tsv	Flow
+3	hard_set.tsv	Hard

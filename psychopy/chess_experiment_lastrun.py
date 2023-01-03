@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2022.2.4),
-    on December 21, 2022, at 12:47
+    on January 03, 2023, at 16:21
 If you publish work using this script the most relevant publication is:
 
     Peirce J, Gray JR, Simpson S, MacAskill M, Höchenberger R, Sogo H, Kastman E, Lindeløv JK. (2019) 
@@ -33,6 +33,8 @@ from psychopy.hardware import keyboard
 ## Initialize global clock var
 global_clock = core.Clock()
 global_time = 0
+# Run 'Before Experiment' code from diff_text
+diff = "blah"
 # Run 'Before Experiment' code from move_piece
 import time
 import chess
@@ -43,6 +45,21 @@ import Generate_inputs as inputgen
 first_mover = "" # Who is playing first
 move_speed = 1 # Computer piece movespeed constant
 board_state = [] # Custom board representation
+
+x_axis = ["a", "b", "c", "d", "e", "f", "g", "h"]
+
+feedback_text = ''   
+correct_color = "springgreen"
+incorrect_color = "red"
+
+puzzle_time = 0
+
+# Data for piece codes and x axis labels
+piece_codes = ["p", "n", "b", "r", "q", "k", "P", "N", "B", "R", "Q", "K"]
+
+# Time it takes for a piece to move from A to B
+# Could instead make it a speed parameter
+move_time = 1
 
 def coord_to_pos(coord):
     '''Convert coordinate system to
@@ -55,12 +72,12 @@ def coord_to_pos(coord):
         for i in range(len(coord)):
             pos[i] = (coord[i]/8) - 9/16
            
-#    global first_mover
-#    if first_mover == "w":
-#        if type(pos) == list:
-#            pos = [i * (-1) for i in pos]
-#        elif type(pos) == float:
-#            pos = pos * (-1)
+    global first_mover
+    if first_mover == "w":
+        if type(pos) == list:
+            pos = [i * (-1) for i in pos]
+        elif type(pos) == float:
+            pos = pos * (-1)
     
     return pos
     
@@ -73,26 +90,26 @@ def pos_to_coord(pos):
         coord = [1, 1]
         for i in range(len(pos)):
             coord[i] = int(round((pos[i] + 9/16) * 8))
-#            
-#    global first_mover
-#    if first_mover == "w":
-#        if type(coord) == list:
-#            coord = [9 - i for i in coord]
-#        elif type(coord) == int:
-#            coord = 9 - coord
+            
+    global first_mover
+    if first_mover == "w":
+        if type(coord) == list:
+            coord = [9 - i for i in coord]
+        elif type(coord) == int:
+            coord = 9 - coord
             
     return coord
     
 def code_to_coord(code):
     '''Convert FEN code to coordinate system'''
-    x_axis = ["a", "b", "c", "d", "e", "f", "g", "h"]
+    global x_axis
     x_pos = x_axis.index(code[0]) + 1
     y_pos = int(code[1])
     return [x_pos, y_pos]
     
 def coord_to_code(coord):
     '''Convert coord to UCI move code'''
-    x_axis = ["a", "b", "c", "d", "e", "f", "g", "h"]
+    global x_axis
     index = coord[0] - 1
     x_code = x_axis[index]
     y_code = coord[1]
@@ -410,21 +427,7 @@ def try_castling_move(castling_king, castling_queen, pieces, player_color):
         
     return moving_piece, start_coord, end_coord
     
-    
-    
-    
-feedback_text = ''   
-correct_color = "springgreen"
-incorrect_color = "red"
 
-puzzle_time = 0
-
-# Data for piece codes and x axis labels
-piece_codes = ["p", "n", "b", "r", "q", "k", "P", "N", "B", "R", "Q", "K"]
-
-# Time it takes for a piece to move from A to B
-# Could instead make it a speed parameter
-move_time = 1
 
 
 # Ensure that relative paths start from the same directory as this script
@@ -504,7 +507,7 @@ start_experiment = keyboard.Keyboard()
 
 # --- Initialize components for Routine "instructions_chess_puzzle" ---
 chess_instructions = visual.TextStim(win=win, name='chess_instructions',
-    text='Instructions slide\n\nComplete the chess puzzles.',
+    text=f"Instructions slide\n\nComplete the chess puzzles.\nDifficulty is: {diff}",
     font='Open Sans',
     pos=(0, 0), height=0.05, wrapWidth=None, ori=0.0, 
     color=[-1.0000, -1.0000, -1.0000], colorSpace='rgb', opacity=None, 
@@ -671,7 +674,7 @@ routineTimer.reset()
 # set up handler to look after randomisation of conditions etc
 chess_levels = data.TrialHandler(nReps=1.0, method='sequential', 
     extraInfo=expInfo, originPath=-1,
-    trialList=data.importConditions('conditions_chess_levels.tsv'),
+    trialList=data.importConditions('conditions_chess_levels.tsv', selection='1,2'),
     seed=None, name='chess_levels')
 thisExp.addLoop(chess_levels)  # add the loop to the experiment
 thisChess_level = chess_levels.trialList[0]  # so we can initialise stimuli with some values
@@ -694,6 +697,10 @@ for thisChess_level in chess_levels:
     start_block.keys = []
     start_block.rt = []
     _start_block_allKeys = []
+    # Run 'Begin Routine' code from diff_text
+    diff = difficulty
+    
+    chess_instructions.text = f"Instructions slide\n\nComplete the chess puzzles.\nDifficulty is: {diff}"
     # keep track of which components have finished
     instructions_chess_puzzleComponents = [chess_instructions, start_block]
     for thisComponent in instructions_chess_puzzleComponents:
@@ -820,6 +827,9 @@ for thisChess_level in chess_levels:
         fen_str = FEN
         fen = fen_str.split(" ")
         
+        # Set first mover
+        first_mover = fen[1]
+        
         # Set Moves from conditions file
         moves_str = Moves
         moves = moves_str.split()
@@ -830,8 +840,6 @@ for thisChess_level in chess_levels:
         
         player_pieces = []
         enemy_pieces = []
-        
-        first_mover = fen[1]
         
         # Identify player and enemy
         if first_mover == "b":
