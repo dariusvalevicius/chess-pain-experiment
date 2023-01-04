@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 This experiment was created using PsychoPy3 Experiment Builder (v2022.2.4),
-    on January 03, 2023, at 16:21
+    on January 04, 2023, at 12:30
 If you publish work using this script the most relevant publication is:
 
     Peirce J, Gray JR, Simpson S, MacAskill M, Höchenberger R, Sogo H, Kastman E, Lindeløv JK. (2019) 
@@ -674,7 +674,7 @@ routineTimer.reset()
 # set up handler to look after randomisation of conditions etc
 chess_levels = data.TrialHandler(nReps=1.0, method='sequential', 
     extraInfo=expInfo, originPath=-1,
-    trialList=data.importConditions('conditions_chess_levels.tsv', selection='1,2'),
+    trialList=data.importConditions('conditions_chess_levels.tsv'),
     seed=None, name='chess_levels')
 thisExp.addLoop(chess_levels)  # add the loop to the experiment
 thisChess_level = chess_levels.trialList[0]  # so we can initialise stimuli with some values
@@ -813,6 +813,13 @@ for thisChess_level in chess_levels:
         # Run 'Begin Routine' code from move_piece
         # Begin Routine
         
+        # Initialize output vars
+        out_correct_answer = 0
+        out_timed_out = 0
+        out_time_elapsed = 0
+        out_moves_played = ""
+        out_difficulty = difficulty
+        
         # Initialize board state and piece arrays
         board_state = [['' for i in range(12)] for i in range(9)]
         white_pieces = []
@@ -943,22 +950,28 @@ for thisChess_level in chess_levels:
                 if timeout_time >= 2:
                     continueRoutine = False
             elif puzzle_time >= 30: # Puzzle timeout
+                # Set output vars
+                out_timed_out = 1
+                out_time_elapsed = puzzle_time
+                
                 feedback_text = "Out of time"
                 chess_feedback.text = feedback_text
                 chess_feedback.color = incorrect_color
                 
                 timeout_clock.reset()
                 timeout = True
-                thisChess_trial["max_time"] = 1
-                
             elif global_time >= 180: # Block timeout
+                # Set output vars
+                out_timed_out = 1
+                out_time_elapsed = puzzle_time
+                
                 feedback_text = "Out of time:\nBlock over"
                 chess_feedback.text = feedback_text
                 chess_feedback.color = "black"
                 
                 timeout_clock.reset()
                 timeout = True
-                thisChess_trial["max_time"] = 1
+                
                 chess_trials.finished = True
             
             # Update clock displays
@@ -1002,14 +1015,11 @@ for thisChess_level in chess_levels:
                         
                     if piece_taken:
                         clear_pieces([piece_taken])
-            #            take_coord = find_empty_take_square(board_state) # Create function to get empty coord
-            #            moving_piece, start_coord, end_coord = begin_move(piece_taken, end_coord, take_coord)
             
                     moving_piece = None
                     
                     move_num = move_num + 1
                     enemy_move = False
-                    
                             
                     # Reset clock
                     move_clock.reset()
@@ -1052,6 +1062,12 @@ for thisChess_level in chess_levels:
                         elif valid_move:
                     
                             clicked_piece.pos = coord_to_pos(snapped_coord)
+                            
+                            # Get move code and add to out_moves_played
+                            player_move_code = f"{coord_to_code(player_move_start)}{coord_to_code(snapped_coord)}"
+                            out_moves_played = f"{out_moves_played} {player_move_code}"
+                            
+                            # Evaluate move
                             piece_taken = evaluate_move(board_state, enemy_pieces, player_pieces, snapped_coord)
                             
                             clear_pieces(valid_move_highlights)
@@ -1084,23 +1100,28 @@ for thisChess_level in chess_levels:
                             # If taking a piece, start movement of piece off board
                             if piece_taken:
                                 clear_pieces([piece_taken])
-            #                    take_coord = find_empty_take_square(board_state)
-            #                    moving_piece, start_coord, end_coord = begin_move(piece_taken, snapped_coord, take_coord)
-                                
+            
                             clicked_piece = None
                             
                             # Check for correct move or end of puzzle
                             correct_move = check_correct_move(move_num, moves, player_move_start, snapped_coord)
-                            
-                          
+                        
                            # Check if wrong move or last move
                             if (correct_move == False) or (move_num == len(moves) - 1):
                                 feedback_text = "Correct" if correct_move else "Incorrect"
                                 chess_feedback.text = feedback_text
                                 if correct_move:
                                     chess_feedback.color = correct_color
+                                    
+                                    # Set output var
+                                    out_correct_answer = 1
+                                    out_time_elapsed = puzzle_time
+                                    
                                 else:
                                     chess_feedback.color = incorrect_color
+                                    
+                                    # Set output var
+                                    out_time_elapsed = puzzle_time
                                     
                                 timeout_clock.reset()
                                 timeout = True
@@ -1171,15 +1192,13 @@ for thisChess_level in chess_levels:
         # Run 'End Routine' code from move_piece
         
         # Set trial data
-        if feedback_text == "Correct":
-            thisChess_trial["correct_answer"] = 1
-        else:
-            thisChess_trial["correct_answer"] = 0
+        thisChess_trial["correct_answer"] = out_correct_answer
+        thisChess_trial["timed_out"] = out_timed_out
+        thisChess_trial["time_elapsed"] = out_time_elapsed
+        thisChess_trial["moves_played"] = out_moves_played
+        thisChess_trial["difficulty"] = out_difficulty
             
-        if thisChess_trial["timed_out"] is not 1:
-            thisChess_trial["timed_out"] = 0
-            
-        
+        # Clear elements
         clear_pieces(white_pieces)
         clear_pieces(black_pieces)
         clear_pieces(highlight_squares)
